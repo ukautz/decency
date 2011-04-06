@@ -1,0 +1,26 @@
+=head1 NAME
+
+decency - Anti-Spam fighting framework
+
+=head1 DESCRIPTION
+
+B<Comming Soon>
+
+decency ..
+
+=over
+
+=item * .. is a highly configurable postfix policy daemon, postfix content filter and postfix log parser.
+
+=item * .. aims to reduce your spam significantly.
+
+=item * .. tries to be as easy as possible for the admin.
+
+=item * .. is designed to work in small, one mailserver setups as well as in complex distributed multi mailserver, multi filter server environments.
+
+=item * .. does not cost you a dime because it is free open source software.
+
+=item * .. has an interface to implement existing anti-spam solutions.
+
+=back
+
