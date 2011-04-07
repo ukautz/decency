@@ -1,0 +1,8 @@
+---
+
+logging:
+    syslog: 1
+    console: 1
+    log_level: 20
+    directory: /var/log/decency
+

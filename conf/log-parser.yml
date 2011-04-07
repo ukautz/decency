@@ -1,0 +1,44 @@
+---
+
+include:
+    - logging.yml
+    - database.yml
+    - cache.yml
+
+syslog:
+    style: Postfix
+    file: /var/log/mail.log
+
+parser:
+    -
+        Stats:
+            disable: 0
+            use_date_interval: 1
+            intervals:
+                - 10
+                - 600
+                - 86400
+            
+            csv_log:
+                file: /var/spool/decency/logs/csv
+                classes:
+                    - total_reject
+                    - connections
+                    - sent
+                    - deferred
+    -
+        Aggregator:
+            disable: 0
+            interval_formats:
+                - 'year-%Y'
+                - 'week-%Y-%U'
+                - 'month-%Y-%m'
+    -
+        GeoSource:
+            disable: 0
+            interval_formats:
+                - 'year-%Y'
+                - 'week-%Y-%U'
+                - 'month-%Y-%m'
+            enable_per_recipient: 1
+

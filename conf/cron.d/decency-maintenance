@@ -1,0 +1,15 @@
+#
+# Maintenance for decency database
+#   * cleanup every night
+#   * check wheter decency is running and restart if not
+#
+
+0 0 * * * root [ ! -f /tmp/decency-policy.disabled ] && sleep $((RANDOM\%3600)) && /usr/bin/perl /opt/decency/bin/decency.pl -a policy -u mailuser -g mailusers --maintenance -l 1 2>&1 | /usr/bin/logger -t decency-maintenance
+0 1 * * * root [ ! -f /tmp/decency-content-filter.disabled ] && sleep $((RANDOM\%3600)) && /usr/bin/perl /opt/decency/bin/decency.pl -a content-filter -u mailuser -g mailusers --maintenance -l 1 2>&1 | /usr/bin/logger -t decency-maintenance
+0 2 * * * root [ ! -f /tmp/decency-log-parser.disabled ] && sleep $((RANDOM\%3600)) && /usr/bin/perl /opt/decency/bin/decency.pl -a log-parser -u mailuser -g mailusers --maintenance -l 1 2>&1 | /usr/bin/logger -t decency-maintenance
+
+*/10 * * * * root [ ! -f /tmp/decency-policy.disabled ] && /usr/bin/perl /opt/decency/bin/check.pl -a policy; echo $? > /tmp/policy.state
+*   * * * * root [ ! -f /tmp/decency-policy.disabled ] && [[ $( cat /tmp/policy.state ) -gt 0 ]] && /usr/bin/perl /opt/decency/bin/decency.pl -a policy -u mailuser -g mailusers -d -l  6
+
+*/10 * * * * root [ ! -f /tmp/decency-content-filter.disabled ] && /usr/bin/perl /opt/decency/bin/check.pl -a content-filter; echo $? > /tmp/content-filter.state
+*   * * * * root [ ! -f /tmp/decency-content-filter.disabled ] && [[ $( cat /tmp/content-filter.state ) -gt 0 ]] && /usr/bin/perl /opt/decency/bin/decency.pl -a content-filter -u mailuser -g mailusers -d -l  6

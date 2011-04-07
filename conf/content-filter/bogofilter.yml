@@ -1,0 +1,16 @@
+---
+cmd_check: /usr/bin/bogofilter -c %user% -U -I %file% -v
+cmd_learn_ham: /usr/bin/bogofilter -c %user% -n -I %file%
+cmd_learn_spam: /usr/bin/bogofilter -c %user% -s -I %file%
+cmd_unlearn_ham: /usr/bin/bogofilter -c %user% -S -I %file%
+cmd_unlearn_spam: /usr/bin/bogofilter -c %user% -N -I %file%
+default_user: /etc/bogofilter.cf
+disable: 0
+max_size: 0
+timeout: 30
+weight_innocent: 10
+weight_spam: -40
+weight_translate:
+  -50: -10
+  0: 0
+

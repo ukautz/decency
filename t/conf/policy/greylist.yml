@@ -1,0 +1,22 @@
+---
+
+disable: 0
+timeout: 30
+
+# interval in seconds until a sender is allowed to re-send
+#   and pass (seconds)
+min_interval: 1
+
+# after this amount of hits, the sender ADDRES will be acceppeted
+#   for the whole recipient DOMAIN
+recipient_domain_threshold: 2
+
+# after this amount of hits, the sender DOMAIN will be acceppeted
+#   for the whole recipient DOMAIN
+sender_domain_threshold: 3
+
+# period of time after which each triplet (in all tables)
+#   will become obsolete (if not seen)
+#   default: 90d
+maintenance_ttl: 90d
+

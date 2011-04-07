@@ -1,0 +1,256 @@
+#!/usr/bin/perl
+
+
+=head1 NAME
+
+edit-database
+
+=head1 DESCRIPTION
+
+Tool for manipulating (edit, delete, search) databases used by decency. It tries to be a convinient interface for all daily tasks (add entries to customer whitelist, backup databses and so on..)
+
+=head1 USAGE
+
+    edit-database [select-database] [options]
+    
+    select database by decency config:
+        
+        --class | -a [policy|content-filter|syslog-parser]
+            which decency class to work on. required to read it's
+            config file
+        
+        --config | -c /path/to/config
+            default: /etc/decency/<class>.yml
+            the config file of the class. we can determine database from here
+        
+        --module | -m [name]
+            name of the module from the class to work on. plese use upper/lower-
+            case.
+            example: DNSBL, CWL, SPF
+    
+    select database by credentials:
+    
+        --db [berkeley|dbd]
+            what kind of database to read
+        
+        --file [path]
+            for berkeley databases or dbd of type sqlite
+        
+        --evn [dir]
+            for berkeley databases
+        
+        --connect [args]
+            list of args, separated by "|' for dbd
+            for mysql that might look like:
+                "DBI:mysql:database=test;host=localhost|user|password"
+            (for sqlite you can use --file as a shortcut)
+        
+    
+    
+    backup
+        
+        --backup [path to backup dir]
+    
+    search
+        
+        --search [search string]
+    
+    insert
+        
+        --insert [key]=[value]
+    
+    stats
+        
+        --stats
+    
+
+=cut
+
+
+# *******************************************************
+#                       EditDB
+# *******************************************************
+#
+# It is not supposed to be ugly, but Moose packages has to
+#   be in front to be correctly created.. 
+#
+
+
+package EditDB;
+use Moose;
+
+
+use strict;
+use warnings;
+use YAML;
+use Data::Dumper;
+use Carp qw/ confess /;
+
+has options => ( is => "ro", isa => "HashRef", required => 1 );
+has db      => ( is => "ro", required => 1 );
+
+sub run_dump {
+    my ( $self ) = @_;
+    my $res = $self->db->dump();
+    print Dumper $res;
+}
+
+
+sub run_load {
+    my ( $self ) = @_;
+    die "Require file to load, provide: --source <file.yml>"
+        unless $self->options->{ source };
+    die "Cannot read/find '". $self->options->{ source }. "'"
+        unless -f $self->options->{ source };
+    $self->db->load( $self->options->{ source } );
+    print "Loaded '$self->options->{ source }'\n";
+}
+
+
+sub run_set {
+    my ( $self ) = @_;
+    die "Require key name: --key <name>"
+        unless $self->options->{ key };
+    die "Require value: --value <data>"
+        unless $self->options->{ value };
+    $self->db->set( $self->options->{ key } => $self->options->{ value } );
+    print "Set '". $self->options->{ key }. "' to '". $self->options->{ value }. "'\n";
+}
+
+
+sub run_delete {
+    my ( $self ) = @_;
+    die "Require key name: --key <name>"
+        unless $self->options->{ key };
+    $self->db->delete( $self->options->{ key } );
+    print "Deleted '". $self->options->{ key }. "'\n";
+}
+
+
+sub run_get {
+    my ( $self ) = @_;
+    die "Require key name: --key <name>"
+        unless $self->options->{ key };
+    my $res = $self->db->get( $self->options->{ key } );
+    print $self->options->{ key }. " = $res\n";
+}
+
+
+sub run_search {
+    my ( $self ) = @_;
+    my %search = ();
+    $search{ key }  = $self->options->{ key } if $self->options->{ key };
+    $search{ data } = $self->options->{ data } if $self->options->{ data };
+        
+    # die "Require key name: --search <query>"
+    #     unless $self->options->{ search };
+    my $res = $self->db->search( dings => bums => \%search );
+    print Dumper $res;
+}
+
+
+sub run_concurrent_test {
+    my ( $self ) = @_;
+    
+    eval {
+        my $test_value;
+        $self->db->set( dings => bums => testkey => 1 );
+        
+        my $max_concurrent = 3;
+        while ( $max_concurrent-- > 0 ) {
+            my $pid;
+            next if $pid = fork;
+            
+            for ( 1..2 ) {
+                print "PRE\n";
+                my ( $last ) = $self->db->increment( dings => bums => 'testkey' );
+                print "Wrote $last\n";
+            }
+            exit;
+        }
+        sleep 5;
+    };
+    
+    confess $@ if $@;
+}
+
+
+
+
+
+
+
+# *******************************************************
+#                       MAIN
+# *******************************************************
+
+
+
+package main;
+
+use strict;
+use warnings;
+
+BEGIN {
+    if ( -d '/opt/decency/lib' ) {
+        use lib '/opt/decency/lib';
+    }
+    if ( -d '/opt/decency/locallib' ) {
+        use lib '/opt/decency/locallib';
+    }
+}
+
+use Data::Dumper;
+use Getopt::Long;
+use Mail::Decency::Helper::Database;
+
+
+my %opt;
+GetOptions(
+    
+    # connect directly
+    "db=s"       => \( $opt{ db } = "" ),
+    "host=s"     => \( $opt{ server } = "" ),
+    "port=i"     => \( $opt{ port } = "" ),
+    
+    # eg: "dbi:SQLite:dbname=/path/to/file.db"
+    "connect=s"  => \( $opt{ connect } = "" ),
+    
+    # actions
+    "action=s"   => \( $opt{ action } = "" ),
+    
+    # testing
+    "test=i"     => \( $opt{ test } = 0 ),
+    "testread=i" => \( $opt{ testread } = 0 ),
+);
+
+# require class
+die "Require --db [MongoDB|DBD]\n"
+    unless $opt{ db } && $opt{ db } =~ /^(?:MongoDB|DBD)$/;
+
+my %create = ();
+if ( $opt{ db } eq 'MongoDB' ) {
+    $create{ host } = $opt{ host } if $opt{ host };
+    $create{ port } = $opt{ port } if $opt{ port };
+}
+elsif ( $opt{ db } eq 'DBD' ) {
+    die "Require --connect \"connect-arg1|connect-arg2|...\"\n"
+        unless $opt{ connect };
+    $create{ args } = [ split( /\s*\|\s*/, $opt{ connect } ) ];
+    $create{ locker } = "/tmp/locker.$$";
+}
+
+my $db = Mail::Decency::Helper::Database->create( $opt{ db } => \%create );
+
+
+my $edit = EditDB->new( options => \%opt, db => $db );
+if ( my $meth = $edit->can( "run_". $opt{ action } ) ) {
+    $edit->$meth();
+}
+
+
+
+
+
+
+1;

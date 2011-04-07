@@ -1,0 +1,15 @@
+---
+
+disable: 0
+
+# the default key. can be used only or as fallback
+sign_key: /home/uk/00_TEMP/dkim-private.key
+
+# a directory where the keys per (sender) domain are. 
+#   /etc/dkim/some-domain.co.uk.key
+#   /etc/dkim/other-domain.com.key
+#sign_key_dir: /etc/decency/dkim/domains
+
+# the algorithmus and method .. change if you know what you are doing
+sign_algo: rsa-sha256
+sign_method: relaxed

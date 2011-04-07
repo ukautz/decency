@@ -1,0 +1,7 @@
+#
+# export the throughput of postfix mailings
+#   because the nagios user has no read access to logfiles (which is good)
+#
+
+# check for being up every 5 minutes
+1,6,11,16,21,26,31,36,41,46,51,56 * * * *       root    /usr/local/bin/postfix-count-throughput > /tmp/postfix-throughput

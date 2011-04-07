@@ -1,0 +1,9 @@
+---
+
+disable: 0
+set_header:
+    X-Sender-Source: Send by me
+replace_header:
+    Subject: 'SEND-OUT: %orig%'
+
+

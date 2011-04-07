@@ -1,0 +1,90 @@
+TODO:
+    * config_params -> optional_params, required_params
+
+0.2.0 2011-02-30 Ulrich Kautz <uk@fortrabbit.de>
+    * Migrated shema definition to separate model modules
+    * Using SQL::Abstract::Limit instead of SQL::Abstract
+    * Database abstraction can now limit and offset
+    * New database methods: distinct, count
+    * Require now MongoDB >= 0.35 (if using mongo)
+    * pageset for database (with Data::Pager)
+    * Began web interface for decency (not in this package)
+    * Greylist db changed (databases are now: sender address + ip + recipient address, sender address + ip + recipient domain, sender domain + ip + recipient domain)
+    * using session data instead of attributes directly in all policy modules
+    * Server stats extended: collect stream log and final response states/period
+    * Renamed the server.pl script to decency.pl
+    * Added daemon support, change of user and group, run-check method, cleanup database method and kill method for the server script
+    * Wrote maintenance cron-scripts
+    * Switched from Moose to Mouse reducing memory footprint to about 60% and gain speed up startup and execution
+    * Restructuring Roles / Modules. Extended MouseX with new inheritance behaviour of roles.
+    * Renamed the M::D::Core::Child module to M::D::Core::Module
+    * Renamed the session_data (Server, Module) handler to session
+    * Keeping track of file handles (open, close, temp files, static files). Modules which die due to timeout or other reasons cannot leave open handles.
+    * MIME changes are now more efficient (not every module making changes has to write the changes immediately)
+    * Splitted M::D::CF::DKIM in DKIMVerify and DKIMSign for clearification
+    * IPC removal problem fixed
+    * Added exclusions directory in addition to config, file and database
+    * Renamed "policy"- and "filters"-attributes in server YAML files to "modules"
+    * Generalized load_modules method for ContentFilter- and Policy-Server
+    * Added LDAP as database
+    * Added custom (domain or address based) thresholds via CustomScoring module
+
+
+0.1.7 2010-07-19 Ulrich Kautz <uk@fortrabbit.de>
+    * M::D::Policy::Greylist: Repsonse line does not include other modules opinions anymore ..
+    * M::D::Policy::SPF: Reject message only, if it is a rejection
+    * M::D::Policy: add_response_message handling updated
+    * Added File::Path >= 2.07 to dependency list (tester report)
+    * Simplified shared code for CF and Policy in handling session to modules
+    * Simplified hook management
+    * Added finish hooks to policy
+    * Sempahore can now be provided to database
+    * M::D::ContentFilter::Archive can now be enabled to archive mails which are recognized as spam
+    * Skip all tests, if DBD::SQLite is not available or IPC::Semaphore cannot create a semaphore
+
+0.1.6 2010-07-12 Ulrich Kautz <uk@fortrabbit.de>
+    * Updated description to clearify the goal of this approach
+    * Updated M::D::LogParser::Core::PostfixParser docs for others as a background to implement other MTAs
+    * Removed Geo::IP from dependencies, test will be skipped if not installed.
+    * Added Net::DNSBL::Client as dependency in tests
+    * Implemented DSPAM via Net::LMTP (instead of command line client)
+    * Converted M::D::ContentFilter::Core::* to Mouse::Role
+    * Implemented SpamAsssassin via Mail::SpamAssassin::Client
+    * Enabled train mode for CF without cmd_-methods (DSPAM, SpamAssassin)
+
+0.1.5 2010-07-02 Ulrich Kautz <uk@fortrabbit.de>
+    * Association module passes mails which pass SPF
+    * Added policy module: Basic (re-implement postfix basic checks, such as reverse hostname and hostname fqdn checks.. but with weighting)
+    * Updated maintenance for M::D::Core::Stats
+    * Added uninstall and install methods to init script
+    * Added Mail::SPF, Email::Valid and Regexp::Common to PREREQ_PM
+    * Added new M::D::Policy::Basic module for weighted postfix basic checks
+
+0.1.4 2010-06-30 Ulrich Kautz <uk@fortrabbit.de>
+    * Added the capability of printing SQL CREATE syntax via M::D::Core::DatabaseCreate module (server.pl .. --print-sql)
+    * Updated Moduel documentation with correct SQL syntax
+    * Updated tables.sql with current SQL (debian package)
+    * empty FROM is now allowed (bounce..)
+    * Reduced module "version" from 0.77 to 0.74, cause this is debian stable.
+    * Updated some content filter documentations
+    * Exclusions added (elide module per recipient/sender domain/address)
+
+0.1.3 2010-06-25 Ulrich Kautz <uk@fortrabbit.de>
+    * Tests fixed (28, 31, 45 and 67): skip if certain modules are not there
+    * M::D::LogParser docu updated
+    * Cookbooks updated (added Hook explanation)
+
+0.1.2 2010-06-23 Ulrich Kautz <uk@fortrabbit.de>
+    * forgot one last version ..
+    * update M::D::ContentFilter description
+    * update M::D::Policy description
+    * added M::D::ContentFilter::Cookbook module for introduction
+    * added M::D::Policy::Cookbook module for introduction
+
+0.1.1 2010-06-23 Ulrich Kautz <uk@fortrabbit.de>
+    * Forgot some versions..
+
+0.1.0 2010-06-21 Ulrich Kautz <uk@fortrabbit.de>
+    * Packed for CPAN
+    * Reset version to 0.1.0
+

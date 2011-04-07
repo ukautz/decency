@@ -1,0 +1,15 @@
+---
+disable: 0
+versions:
+  - 1
+  - 2
+weight_error: 0
+weight_fail: -50
+weight_neutral: -10
+weight_neutral_by_default: -10
+weight_none: 0
+weight_pass: 10
+weight_permerror: -10
+weight_softfail: -10
+weight_temperror: 0
+

@@ -1,0 +1,13 @@
+---
+
+disable: 1
+set_header:
+    X-Decency: 1
+    X-Something: lalalala
+remove_header:
+    - 'X-Mailer'
+    - 'XXX'
+replace_header:
+    Subject: 'REPLACE: %orig%'
+
+

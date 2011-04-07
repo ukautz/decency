@@ -1,0 +1,51 @@
+Return-Path: <ulrich.kautz@googlemail.com>
+Delivered-To: uk@fortrabbit.de
+Received: from localhost (localhost [127.0.0.1])
+	by mail.service.frbit.de (Postfix) with SMTP id B4B861A44B
+	for <uk@fortrabbit.de>; Sun, 19 Dec 2010 02:46:33 +0100 (CET)
+Received: from mail-bw0-f49.google.com (mail-bw0-f49.google.com [209.85.214.49])
+	by mail.service.frbit.de (Postfix) with ESMTP id 89BFA1A44A
+	for <uk@fortrabbit.de>; Sun, 19 Dec 2010 02:46:33 +0100 (CET)
+Received: by bwz5 with SMTP id 5so2291881bwz.36
+        for <uk@fortrabbit.de>; Sat, 18 Dec 2010 17:45:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=gamma;
+        h=domainkey-signature:received:received:message-id:date:from
+         :user-agent:mime-version:to:subject:x-enigmail-version:content-type
+         :content-transfer-encoding;
+        bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+        b=x2sDDKJEsgI/BIYlY3dElT2YwvZ43yAAjsY//BErQXzpKpfoRXfWkOZZb3P9/VaeC9
+         YayyA+TIRV8Zp91LO8A9ANFxzWIzRl1DZQzx93yMIUxfxqueNQyoP3W4j1o9N/NaEmfs
+         zJ5LlPLHPtW+8XipPT2AKztW+a001KvfpBSx0=
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=googlemail.com; s=gamma;
+        h=message-id:date:from:user-agent:mime-version:to:subject
+         :x-enigmail-version:content-type:content-transfer-encoding;
+        b=JQ14hpjdO3z1giduOmRH+pMiDdUfuaJXA2PU54Kl1OJnb2/Z+lAHSu6LVo/jOjNsfm
+         jYyLPE/GMcuO7hhHfBZRxBgkrItzJZlW1VhqXrDPmaRy7kKCZA1Uk0Vemw65eiX8msoc
+         auIZaqgRU9G78WHKjbJq9NpeMHeJhLB5pkWgk=
+Received: by 10.204.116.79 with SMTP id l15mr2145905bkq.122.1292723107949;
+        Sat, 18 Dec 2010 17:45:07 -0800 (PST)
+Received: from [192.168.178.38] (brln-4db9d6b2.pool.mediaWays.net [77.185.214.178])
+        by mx.google.com with ESMTPS id v25sm2848088bkt.18.2010.12.18.17.45.06
+        (version=SSLv3 cipher=RC4-MD5);
+        Sat, 18 Dec 2010 17:45:07 -0800 (PST)
+Message-ID: <4D0D63A1.8040602@googlemail.com>
+Date: Sun, 19 Dec 2010 02:45:05 +0100
+From: Ulrich Kautz <ulrich.kautz@googlemail.com>
+User-Agent: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9.2.13) Gecko/20101207 Lightning/1.0b2 Thunderbird/3.1.7
+MIME-Version: 1.0
+To: Ulrich Kautz <uk@fortrabbit.de>
+Subject: test dkim
+X-Enigmail-Version: 1.1.1
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+X-DSPAM-Result: Innocent
+X-DSPAM-Processed: Sun Dec 19 02:46:33 2010
+X-DSPAM-Confidence: 0.9913
+X-DSPAM-Probability: 0.0000
+X-DSPAM-Signature: 4d0d63f95728369513237
+
+
+
+

@@ -1,0 +1,8 @@
+---
+archive_dir: /var/spool/decency/archive/%recipient_domain%/%ymd%/%recipient_prefix%-%hm%
+archive_spam: 1
+disable: 0
+drop: 0
+max_size: 0
+timeout: 30
+

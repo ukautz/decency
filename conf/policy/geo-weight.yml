@@ -1,0 +1,14 @@
+---
+disable: 0
+weight_classes:
+  - countries:
+      - AU
+      - DE
+      - US
+    weight: 10
+  - countries:
+      - DK
+      - SE
+    weight: 5
+weight_default: -5
+

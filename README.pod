@@ -1,3 +1,7 @@
+=head1 BE AWARE
+
+The current version is not yet cleaned. Please be patient if it prints out lots of stuff you don't want to know.
+
 =head1 NAME
 
 decency - Anti-Spam fighting framework
@@ -10,17 +14,91 @@ decency ..
 
 =over
 
-=item * .. is a highly configurable postfix policy daemon, postfix content filter and postfix log parser.
+=item * is a highly configurable postfix policy daemon, postfix content filter and postfix log parser.
 
-=item * .. aims to reduce your spam significantly.
+=item * aims to reduce your spam significantly.
 
-=item * .. tries to be as easy as possible for the admin.
+=item * tries to be as easy as possible for the admin.
 
-=item * .. is designed to work in small, one mailserver setups as well as in complex distributed multi mailserver, multi filter server environments.
+=item * is designed to work in small, one mailserver setups as well as in complex distributed multi mailserver, multi filter server environments.
 
-=item * .. does not cost you a dime because it is free open source software.
+=item * does not cost you a dime because it is free open source software.
 
-=item * .. has an interface to implement existing anti-spam solutions.
+=item * has an interface to implement existing anti-spam solutions.
 
 =back
+
+=head1 DEVELOPMENT STATE
+
+decency is close to beta, but not yet there. However, it has already passed months of production (yes, i can run it, but you shouldnt) and real time tests survived. Some modules have less and some have more. It's mostly a matter of not having the time to write the docu, cleanup unused stuff and so on.
+
+=head1 REQUIREMENTS
+
+=head2 PERL
+
+At least you need perl 5.10
+
+=head3 RUN
+
+    Archive::Tar >= 1.40
+    Crypt::OpenSSL::RSA
+    Data::Pager
+    DateTime
+    Digest::MD5
+    Digest::SHA
+    File::Path >= 2.07
+    File::Temp
+    IO >= 1.24
+    IO::String
+    IO::YAML >= 0.08
+    MIME::Lite
+    MIME::Parser
+    MIME::QuotedPrint
+    Mouse >= 1.00
+    MouseX::NativeTraits
+    Net::DNS::Resolver
+    Net::LMTP
+    Net::SMTP
+    POE
+    POE::Filter::Postfix
+    Proc::ProcessTable
+    Regexp::Common
+    Regexp::IPv6
+    Storable
+    Time::HiRes
+    YAML
+
+=head3 TESTING
+
+    Cache::File
+    DBD::SQLite
+    DBI
+    DBIx::Connector
+    SQL::Abstract::Limit
+
+=head3 OPTIONAL
+
+Depending on which modules you plan to use
+
+    Cache::FastMmap
+    Cache::Memcached or Class::Memcached::XS
+        Also a running memcached server
+    ClamAV::Client
+        Also a running clamav-server
+    Email::Valid
+    Geo::IP
+        CAUTION: You better install this via your distri installer, can be quite time intensive and a lot of hassle
+    Mail::DKIM
+    Mail::SPF
+    Mail::SpamAssassin::Client
+        Also a running SpamAssassin somewhere
+    MongoDB
+        Also a running mongodb server
+    Net::DNSBL::Client
+    Net::Domain::TLD
+    Net::LDAP
+        Also a running LDAP server
+    Net::Netmask
+    Sys::Syslog
+        And a runnning syslog
 

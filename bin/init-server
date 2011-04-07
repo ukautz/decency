@@ -1,0 +1,169 @@
+#!/bin/bash
+
+#
+# Decency starter script
+#
+# Tested with debian 5.0.4
+#
+# Version: 0.1.5
+#
+
+if [ -z $1 ]; then
+    echo "Usage: $0 [policy|content-filter|log-parser] [start|stop|status|restart|install|uninstall]"
+    exit 1
+fi
+
+
+if [ "X$DECENCY_ARGS" == "X" ]; then
+    DECENCY_ARGS=""
+fi
+if [ "X$DECENCY_PERL_BASE" == "X" ]; then
+    DECENCY_PERL_BASE=""
+fi
+if [ "X$DECENCY_PERL" == "X" ]; then
+    DECENCY_PERL=$( which perl )
+fi
+if [ "X$DECENCY_USER" == "X" ]; then
+    DECENCY_USER="mailuser"
+fi
+
+DECENCY_SERVER=$1
+DECENCY_CMD="/opt/decency/bin/server.pl"
+DECENCY_PID="/var/run/decency/$DECENCY_SERVER.pid"
+
+
+# load defaults
+[ -x "/etc/defaults/decency-$DECENCY_SERVER" ] && . /etc/defaults/decency-$DECENCY_SERVER
+
+if [ -e /etc/defaults/decency-$DECENCY_SERVER ]; then
+    if [[ -z $ENABLE_DECENCY || $ENABLE_DECENCY != "yes" ]]; then
+        echo "Enable decency in /etc/defaults/decency-$DECENCY_SERVER"
+        exit 0
+    fi
+fi
+
+# init scripts
+. /lib/lsb/init-functions
+
+is_running() {
+    if [ -f $DECENCY_PID ]; then
+        PID=$( cat $DECENCY_PID )
+        if [ "X$PID" != "X" ]; then
+            kill -0 $PID 2>/dev/null
+            if [ $? -eq 0 ]; then
+                return 1
+            fi
+        fi
+    fi
+    return 0
+}
+
+# check wheter already running
+is_running
+IS_RUNNING=$?
+
+
+case $2 in
+    start)
+        # check wheter already running
+        if [ $IS_RUNNING -gt 0 ]; then
+            log_failure_msg "$DECENCY_SERVER server already running!"
+            exit 0
+        fi
+        
+        # start now
+        log_daemon_msg "Start $DECENCY_SERVER server"
+        start-stop-daemon --background  --name "$DECENCY_SERVER-$$" --start --exec $DECENCY_PERL -- $DECENCY_PERL_BASE $DECENCY_CMD $DECENCY_ARGS --pid-file $DECENCY_PID --class $DECENCY_SERVER --user $DECENCY_USER
+        
+        # check wheter started
+        sleep 1
+        is_running
+        if [ $? -gt 0 ]; then
+            log_success_msg "$DECENCY_SERVER server is has been started"
+            exit 0
+        else
+            log_failure_msg "$DECENCY_SERVER server could not be started"
+            echo "start-stop-daemon --background  --name "$DECENCY_SERVER-$$" --start --exec $DECENCY_PERL -- $DECENCY_PERL_BASE $DECENCY_CMD $DECENCY_ARGS --pid-file $DECENCY_PID --class $DECENCY_SERVER --user $DECENCY_USER"
+            exit 1
+        fi
+    ;;
+    stop)
+        
+        # only stop if running
+        log_daemon_msg "Stop $DECENCY_SERVER server"
+        if [ $IS_RUNNING -eq 0 ]; then
+            log_failure_msg "$DECENCY_SERVER server is not running!"
+            exit 1
+        fi
+        
+        # perform stop
+        start-stop-daemon --pid $DECENCY_PID --stop
+        
+        # check wheter started
+        sleep 1
+        is_running
+        if [ $? -eq 0 ]; then
+            log_success_msg "$DECENCY_SERVER server has been stopped"
+            if [ -f $DECENCY_PID ]; then
+                rm $DECENCY_PID
+            fi
+            exit 0
+        else
+            log_failure_msg "$DECENCY_SERVER server could not be stopped"
+            exit 1
+        fi
+    ;;
+    
+    restart)
+         $0 stop
+         sleep 1
+         $0 start
+    ;;
+    
+    status)
+        
+        # is running ?
+        if [ $IS_RUNNING -gt 0 ]; then
+            log_success_msg "$DECENCY_SERVER server is running!"
+            exit 0
+        fi
+        
+        # not running ..
+        log_failure_msg "$DECENCY_SERVER server not running"
+        exit 1
+    ;;
+    
+    install)
+        
+        # install to run levels
+        INIT_SCRIPT=/etc/init.d/decency-$DECENCY_SERVER
+        if [ ! -e $INIT_SCRIPT ]; then
+            echo "Do install $INIT_SCRIPT"
+            DIR=$( dirname $0 )
+            ln -s $0/init-$DECENCY_SERVER-server /etc/init.d/decency-$DECENCY_SERVER
+            update-rc.d decency-$DECENCY_SERVER defaults 24 >/dev/null
+        else
+            echo "Found $INIT_SCRIPT, do not re-install. Remove it manually.."
+        fi
+        exit 1
+    ;;
+    
+    uninstall)
+        INIT_SCRIPT=/etc/init.d/decency-$DECENCY_SERVER
+        if [ -e $INIT_SCRIPT ]; then
+            echo "Remove $INIT_SCRIPT"
+            rm $INIT_SCRIPT
+            update-rc.d decency-$DECENCY_SERVER remove >/dev/null || exit $?
+        else
+            echo "Could not find $INIT_SCRIPT, do not remove"
+        fi
+        exit 1
+    ;;
+    
+    *)
+        log_failure_msg "Unknown command '$1'" 
+        exit 1
+    ;;
+esac
+
+

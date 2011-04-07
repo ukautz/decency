@@ -1,0 +1,8 @@
+---
+disable: 0
+negative_cache: 0
+tables:
+  - ips
+  - domains
+  - addresses
+

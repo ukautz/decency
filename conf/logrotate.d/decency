@@ -1,0 +1,23 @@
+/var/log/decency/debug.log {
+   rotate 7
+   daily
+   compress
+}
+
+/var/log/decency/info.log {
+   rotate 7
+   daily
+   compress
+}
+
+/var/log/decency/error.log {
+   rotate 7
+   daily
+   compress
+}
+
+/var/log/decency/report.log {
+   rotate 7
+   daily
+   compress
+}

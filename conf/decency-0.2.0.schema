@@ -1,0 +1,508 @@
+objectIdentifier    decencyAttribOID           1.1.12345
+objectIdentifier    decencyClassOID           1.1.12346
+
+
+#
+# Types
+#
+
+attributetype ( decencyAttribOID:99.1.1.255 NAME 'decencyVarchar255'
+    EQUALITY caseIgnoreMatch
+    ORDERING caseIgnoreOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{255} SINGLE-VALUE )
+
+attributetype ( decencyAttribOID:99.1.1.39 NAME 'decencyVarchar39'
+    EQUALITY caseIgnoreMatch
+    ORDERING caseIgnoreOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{39} SINGLE-VALUE )
+
+attributetype ( decencyAttribOID:99.1.2 NAME 'decencyInteger'
+    EQUALITY integerMatch
+    ORDERING integerOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+
+attributetype ( decencyAttribOID:99.1.1.2 NAME 'decencyVarchar2'
+    EQUALITY caseIgnoreMatch
+    ORDERING caseIgnoreOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{2} SINGLE-VALUE )
+
+attributetype ( decencyAttribOID:99.1.1.25 NAME 'decencyVarchar25'
+    EQUALITY caseIgnoreMatch
+    ORDERING caseIgnoreOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{25} SINGLE-VALUE )
+
+attributetype ( decencyAttribOID:99.1.1.100 NAME 'decencyVarchar100'
+    EQUALITY caseIgnoreMatch
+    ORDERING caseIgnoreOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{100} SINGLE-VALUE )
+
+attributetype ( decencyAttribOID:99.1.1.32 NAME 'decencyVarchar32'
+    EQUALITY caseIgnoreMatch
+    ORDERING caseIgnoreOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32} SINGLE-VALUE )
+
+attributetype ( decencyAttribOID:99.1.1.20 NAME 'decencyVarchar20'
+    EQUALITY caseIgnoreMatch
+    ORDERING caseIgnoreOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{20} SINGLE-VALUE )
+
+attributetype ( decencyAttribOID:99.1.1.10 NAME 'decencyVarchar10'
+    EQUALITY caseIgnoreMatch
+    ORDERING caseIgnoreOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{10} SINGLE-VALUE )
+
+attributetype ( decencyAttribOID:99.1.4 NAME 'decencyReal'
+    EQUALITY numericStringMatch
+    ORDERING numericStringOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.36 SINGLE-VALUE )
+
+
+#
+# Attributes
+#
+
+attributetype ( decencyAttribOID:100.1.2.1 NAME 'decencyCblAddressesFromAddress'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.1.2.2 NAME 'decencyCblAddressesToDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.1.2.3 NAME 'decencyCblDomainsFromDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.1.2.4 NAME 'decencyCblDomainsToDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.1.2.5 NAME 'decencyCblIpsIp'
+    SUP decencyVarchar39 )
+
+attributetype ( decencyAttribOID:100.1.2.6 NAME 'decencyCblIpsToDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.2.2.1 NAME 'decencyCwlAddressesFromAddress'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.2.2.2 NAME 'decencyCwlAddressesToDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.2.2.3 NAME 'decencyCwlDomainsFromDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.2.2.4 NAME 'decencyCwlDomainsToDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.2.2.5 NAME 'decencyCwlIpsIp'
+    SUP decencyVarchar39 )
+
+attributetype ( decencyAttribOID:100.2.2.6 NAME 'decencyCwlIpsToDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.3.2.1 NAME 'decencyGeoStatsCounter'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.3.2.2 NAME 'decencyGeoStatsCountry'
+    SUP decencyVarchar2 )
+
+attributetype ( decencyAttribOID:100.3.2.3 NAME 'decencyGeoStatsInterval'
+    SUP decencyVarchar25 )
+
+attributetype ( decencyAttribOID:100.4.2.1 NAME 'decencyGreylistAddressData'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.4.2.2 NAME 'decencyGreylistAddressFromAddress'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.4.2.3 NAME 'decencyGreylistAddressIp'
+    SUP decencyVarchar39 )
+
+attributetype ( decencyAttribOID:100.4.2.4 NAME 'decencyGreylistAddressLastUpdate'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.4.2.5 NAME 'decencyGreylistAddressToAddress'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.4.2.6 NAME 'decencyGreylistRecipientData'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.4.2.7 NAME 'decencyGreylistRecipientFromAddress'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.4.2.8 NAME 'decencyGreylistRecipientIp'
+    SUP decencyVarchar39 )
+
+attributetype ( decencyAttribOID:100.4.2.9 NAME 'decencyGreylistRecipientLastUpdate'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.4.2.10 NAME 'decencyGreylistRecipientToDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.4.2.11 NAME 'decencyGreylistSenderData'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.4.2.12 NAME 'decencyGreylistSenderFromDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.4.2.13 NAME 'decencyGreylistSenderIp'
+    SUP decencyVarchar39 )
+
+attributetype ( decencyAttribOID:100.4.2.14 NAME 'decencyGreylistSenderLastUpdate'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.4.2.15 NAME 'decencyGreylistSenderToDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.5.2.1 NAME 'decencyHoneypotIpsCreated'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.5.2.2 NAME 'decencyHoneypotIpsIp'
+    SUP decencyVarchar39 )
+
+attributetype ( decencyAttribOID:100.6.2.1 NAME 'decencySenderPermitFingerprint'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.6.2.2 NAME 'decencySenderPermitFromDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.6.2.3 NAME 'decencySenderPermitIp'
+    SUP decencyVarchar39 )
+
+attributetype ( decencyAttribOID:100.6.2.4 NAME 'decencySenderPermitSubject'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.6.2.5 NAME 'decencySenderPermitToDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.7.2.1 NAME 'decencyThrottleAccountAccount'
+    SUP decencyVarchar100 )
+
+attributetype ( decencyAttribOID:100.7.2.2 NAME 'decencyThrottleAccountInterval'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.3 NAME 'decencyThrottleAccountMaximum'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.4 NAME 'decencyThrottleClientAddressAccount'
+    SUP decencyVarchar100 )
+
+attributetype ( decencyAttribOID:100.7.2.5 NAME 'decencyThrottleClientAddressClientAddress'
+    SUP decencyVarchar39 )
+
+attributetype ( decencyAttribOID:100.7.2.6 NAME 'decencyThrottleClientAddressInterval'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.7 NAME 'decencyThrottleClientAddressMaximum'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.8 NAME 'decencyThrottleRecipientAddressAccount'
+    SUP decencyVarchar100 )
+
+attributetype ( decencyAttribOID:100.7.2.9 NAME 'decencyThrottleRecipientAddressInterval'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.10 NAME 'decencyThrottleRecipientAddressMaximum'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.11 NAME 'decencyThrottleRecipientAddressRecipientAddress'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.7.2.12 NAME 'decencyThrottleRecipientDomainAccount'
+    SUP decencyVarchar100 )
+
+attributetype ( decencyAttribOID:100.7.2.13 NAME 'decencyThrottleRecipientDomainInterval'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.14 NAME 'decencyThrottleRecipientDomainMaximum'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.15 NAME 'decencyThrottleRecipientDomainRecipientDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.7.2.16 NAME 'decencyThrottleSaslUsernameAccount'
+    SUP decencyVarchar100 )
+
+attributetype ( decencyAttribOID:100.7.2.17 NAME 'decencyThrottleSaslUsernameInterval'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.18 NAME 'decencyThrottleSaslUsernameMaximum'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.19 NAME 'decencyThrottleSaslUsernameSaslUsername'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.7.2.20 NAME 'decencyThrottleSenderAddressAccount'
+    SUP decencyVarchar100 )
+
+attributetype ( decencyAttribOID:100.7.2.21 NAME 'decencyThrottleSenderAddressInterval'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.22 NAME 'decencyThrottleSenderAddressMaximum'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.23 NAME 'decencyThrottleSenderAddressSenderAddress'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:100.7.2.24 NAME 'decencyThrottleSenderDomainAccount'
+    SUP decencyVarchar100 )
+
+attributetype ( decencyAttribOID:100.7.2.25 NAME 'decencyThrottleSenderDomainInterval'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.26 NAME 'decencyThrottleSenderDomainMaximum'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:100.7.2.27 NAME 'decencyThrottleSenderDomainSenderDomain'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:99.2.1.10.1 NAME 'decencyContentfilterExclusionsModule'
+    SUP decencyVarchar32 )
+
+attributetype ( decencyAttribOID:99.2.1.11.1 NAME 'decencyContentfilterExclusionsType'
+    SUP decencyVarchar20 )
+
+attributetype ( decencyAttribOID:99.2.1.12.1 NAME 'decencyContentfilterExclusionsValue'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:99.3.1.10.1 NAME 'decencyContentfilterCustomScoringRecipient'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:99.3.1.11.1 NAME 'decencyContentfilterCustomScoringValue'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.1.1.10.1 NAME 'decencyContentfilterModulePerformanceCalls'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.1.1.11.1 NAME 'decencyContentfilterModulePerformanceLastUpdate'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.1.1.12.1 NAME 'decencyContentfilterModulePerformanceModule'
+    SUP decencyVarchar32 )
+
+attributetype ( decencyAttribOID:99.4.1.1.13.1 NAME 'decencyContentfilterModulePerformancePeriod'
+    SUP decencyVarchar10 )
+
+attributetype ( decencyAttribOID:99.4.1.1.14.1 NAME 'decencyContentfilterModulePerformanceRuntime'
+    SUP decencyReal )
+
+attributetype ( decencyAttribOID:99.4.1.1.15.1 NAME 'decencyContentfilterModulePerformanceScore'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.1.1.16.1 NAME 'decencyContentfilterModulePerformanceStart'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.2.1.10.1 NAME 'decencyContentfilterModuleResultsCalls'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.2.1.11.1 NAME 'decencyContentfilterModuleResultsLastUpdate'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.2.1.12.1 NAME 'decencyContentfilterModuleResultsModule'
+    SUP decencyVarchar32 )
+
+attributetype ( decencyAttribOID:99.4.2.1.13.1 NAME 'decencyContentfilterModuleResultsPeriod'
+    SUP decencyVarchar10 )
+
+attributetype ( decencyAttribOID:99.4.2.1.14.1 NAME 'decencyContentfilterModuleResultsStart'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.2.1.15.1 NAME 'decencyContentfilterModuleResultsStatus'
+    SUP decencyVarchar32 )
+
+attributetype ( decencyAttribOID:99.4.3.1.10.1 NAME 'decencyContentfilterFinalStateAmount'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.3.1.11.1 NAME 'decencyContentfilterFinalStatePeriod'
+    SUP decencyVarchar25 )
+
+attributetype ( decencyAttribOID:99.4.3.1.12.1 NAME 'decencyContentfilterFinalStateStart'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.3.1.13.1 NAME 'decencyContentfilterFinalStateStatus'
+    SUP decencyVarchar10 )
+
+attributetype ( decencyAttribOID:99.2.2.10.1 NAME 'decencyPolicyExclusionsModule'
+    SUP decencyVarchar32 )
+
+attributetype ( decencyAttribOID:99.2.2.11.1 NAME 'decencyPolicyExclusionsType'
+    SUP decencyVarchar20 )
+
+attributetype ( decencyAttribOID:99.2.2.12.1 NAME 'decencyPolicyExclusionsValue'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:99.3.2.10.1 NAME 'decencyPolicyCustomScoringRecipient'
+    SUP decencyVarchar255 )
+
+attributetype ( decencyAttribOID:99.3.2.11.1 NAME 'decencyPolicyCustomScoringValue'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.1.2.10.1 NAME 'decencyPolicyModulePerformanceCalls'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.1.2.11.1 NAME 'decencyPolicyModulePerformanceLastUpdate'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.1.2.12.1 NAME 'decencyPolicyModulePerformanceModule'
+    SUP decencyVarchar32 )
+
+attributetype ( decencyAttribOID:99.4.1.2.13.1 NAME 'decencyPolicyModulePerformancePeriod'
+    SUP decencyVarchar10 )
+
+attributetype ( decencyAttribOID:99.4.1.2.14.1 NAME 'decencyPolicyModulePerformanceRuntime'
+    SUP decencyReal )
+
+attributetype ( decencyAttribOID:99.4.1.2.15.1 NAME 'decencyPolicyModulePerformanceScore'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.1.2.16.1 NAME 'decencyPolicyModulePerformanceStart'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.2.2.10.1 NAME 'decencyPolicyModuleResultsCalls'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.2.2.11.1 NAME 'decencyPolicyModuleResultsLastUpdate'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.2.2.12.1 NAME 'decencyPolicyModuleResultsModule'
+    SUP decencyVarchar32 )
+
+attributetype ( decencyAttribOID:99.4.2.2.13.1 NAME 'decencyPolicyModuleResultsPeriod'
+    SUP decencyVarchar10 )
+
+attributetype ( decencyAttribOID:99.4.2.2.14.1 NAME 'decencyPolicyModuleResultsStart'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.2.2.15.1 NAME 'decencyPolicyModuleResultsStatus'
+    SUP decencyVarchar32 )
+
+attributetype ( decencyAttribOID:99.4.3.2.10.1 NAME 'decencyPolicyFinalStateAmount'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.3.2.11.1 NAME 'decencyPolicyFinalStatePeriod'
+    SUP decencyVarchar25 )
+
+attributetype ( decencyAttribOID:99.4.3.2.12.1 NAME 'decencyPolicyFinalStateStart'
+    SUP decencyInteger )
+
+attributetype ( decencyAttribOID:99.4.3.2.13.1 NAME 'decencyPolicyFinalStateStatus'
+    SUP decencyVarchar10 )
+
+
+#
+# Classes
+#
+
+objectclass ( decencyClassOID:100.1.1.1 NAME 'decencyCblAddresses'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyCblAddressesFromAddress $ decencyCblAddressesToDomain ) )
+
+objectclass ( decencyClassOID:100.1.1.2 NAME 'decencyCblDomains'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyCblDomainsFromDomain $ decencyCblDomainsToDomain ) )
+
+objectclass ( decencyClassOID:100.1.1.3 NAME 'decencyCblIps'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyCblIpsIp $ decencyCblIpsToDomain ) )
+
+objectclass ( decencyClassOID:100.2.1.4 NAME 'decencyCwlAddresses'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyCwlAddressesFromAddress $ decencyCwlAddressesToDomain ) )
+
+objectclass ( decencyClassOID:100.2.1.5 NAME 'decencyCwlDomains'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyCwlDomainsFromDomain $ decencyCwlDomainsToDomain ) )
+
+objectclass ( decencyClassOID:100.2.1.6 NAME 'decencyCwlIps'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyCwlIpsIp $ decencyCwlIpsToDomain ) )
+
+objectclass ( decencyClassOID:100.3.1.7 NAME 'decencyGeoStats'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyGeoStatsCounter $ decencyGeoStatsCountry $ decencyGeoStatsInterval ) )
+
+objectclass ( decencyClassOID:100.4.1.8 NAME 'decencyGreylistAddress'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyGreylistAddressData $ decencyGreylistAddressFromAddress $ decencyGreylistAddressIp $ decencyGreylistAddressLastUpdate $ decencyGreylistAddressToAddress ) )
+
+objectclass ( decencyClassOID:100.4.1.9 NAME 'decencyGreylistRecipient'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyGreylistRecipientData $ decencyGreylistRecipientFromAddress $ decencyGreylistRecipientIp $ decencyGreylistRecipientLastUpdate $ decencyGreylistRecipientToDomain ) )
+
+objectclass ( decencyClassOID:100.4.1.10 NAME 'decencyGreylistSender'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyGreylistSenderData $ decencyGreylistSenderFromDomain $ decencyGreylistSenderIp $ decencyGreylistSenderLastUpdate $ decencyGreylistSenderToDomain ) )
+
+objectclass ( decencyClassOID:100.5.1.11 NAME 'decencyHoneypotIps'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyHoneypotIpsCreated $ decencyHoneypotIpsIp ) )
+
+objectclass ( decencyClassOID:100.6.1.12 NAME 'decencySenderPermit'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencySenderPermitFingerprint $ decencySenderPermitFromDomain $ decencySenderPermitIp $ decencySenderPermitSubject $ decencySenderPermitToDomain ) )
+
+objectclass ( decencyClassOID:100.7.1.13 NAME 'decencyThrottleAccount'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyThrottleAccountAccount $ decencyThrottleAccountInterval $ decencyThrottleAccountMaximum ) )
+
+objectclass ( decencyClassOID:100.7.1.14 NAME 'decencyThrottleClientAddress'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyThrottleClientAddressAccount $ decencyThrottleClientAddressClientAddress $ decencyThrottleClientAddressInterval $ decencyThrottleClientAddressMaximum ) )
+
+objectclass ( decencyClassOID:100.7.1.15 NAME 'decencyThrottleRecipientAddress'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyThrottleRecipientAddressAccount $ decencyThrottleRecipientAddressInterval $ decencyThrottleRecipientAddressMaximum $ decencyThrottleRecipientAddressRecipientAddress ) )
+
+objectclass ( decencyClassOID:100.7.1.16 NAME 'decencyThrottleRecipientDomain'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyThrottleRecipientDomainAccount $ decencyThrottleRecipientDomainInterval $ decencyThrottleRecipientDomainMaximum $ decencyThrottleRecipientDomainRecipientDomain ) )
+
+objectclass ( decencyClassOID:100.7.1.17 NAME 'decencyThrottleSaslUsername'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyThrottleSaslUsernameAccount $ decencyThrottleSaslUsernameInterval $ decencyThrottleSaslUsernameMaximum $ decencyThrottleSaslUsernameSaslUsername ) )
+
+objectclass ( decencyClassOID:100.7.1.18 NAME 'decencyThrottleSenderAddress'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyThrottleSenderAddressAccount $ decencyThrottleSenderAddressInterval $ decencyThrottleSenderAddressMaximum $ decencyThrottleSenderAddressSenderAddress ) )
+
+objectclass ( decencyClassOID:100.7.1.19 NAME 'decencyThrottleSenderDomain'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyThrottleSenderDomainAccount $ decencyThrottleSenderDomainInterval $ decencyThrottleSenderDomainMaximum $ decencyThrottleSenderDomainSenderDomain ) )
+
+objectclass ( decencyClassOID:99.2.1.0.20 NAME 'decencyContentfilterExclusions'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyContentfilterExclusionsModule $ decencyContentfilterExclusionsType $ decencyContentfilterExclusionsValue ) )
+
+objectclass ( decencyClassOID:99.3.1.0.21 NAME 'decencyContentfilterCustomScoring'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyContentfilterCustomScoringRecipient $ decencyContentfilterCustomScoringValue ) )
+
+objectclass ( decencyClassOID:99.4.1.1.0.22 NAME 'decencyContentfilterModulePerformance'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyContentfilterModulePerformanceCalls $ decencyContentfilterModulePerformanceLastUpdate $ decencyContentfilterModulePerformanceModule $ decencyContentfilterModulePerformancePeriod $ decencyContentfilterModulePerformanceRuntime $ decencyContentfilterModulePerformanceScore $ decencyContentfilterModulePerformanceStart ) )
+
+objectclass ( decencyClassOID:99.4.2.1.0.23 NAME 'decencyContentfilterModuleResults'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyContentfilterModuleResultsCalls $ decencyContentfilterModuleResultsLastUpdate $ decencyContentfilterModuleResultsModule $ decencyContentfilterModuleResultsPeriod $ decencyContentfilterModuleResultsStart $ decencyContentfilterModuleResultsStatus ) )
+
+objectclass ( decencyClassOID:99.4.3.1.0.24 NAME 'decencyContentfilterFinalState'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyContentfilterFinalStateAmount $ decencyContentfilterFinalStatePeriod $ decencyContentfilterFinalStateStart $ decencyContentfilterFinalStateStatus ) )
+
+objectclass ( decencyClassOID:99.2.2.0.25 NAME 'decencyPolicyExclusions'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyPolicyExclusionsModule $ decencyPolicyExclusionsType $ decencyPolicyExclusionsValue ) )
+
+objectclass ( decencyClassOID:99.3.2.0.26 NAME 'decencyPolicyCustomScoring'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyPolicyCustomScoringRecipient $ decencyPolicyCustomScoringValue ) )
+
+objectclass ( decencyClassOID:99.4.1.2.0.27 NAME 'decencyPolicyModulePerformance'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyPolicyModulePerformanceCalls $ decencyPolicyModulePerformanceLastUpdate $ decencyPolicyModulePerformanceModule $ decencyPolicyModulePerformancePeriod $ decencyPolicyModulePerformanceRuntime $ decencyPolicyModulePerformanceScore $ decencyPolicyModulePerformanceStart ) )
+
+objectclass ( decencyClassOID:99.4.2.2.0.28 NAME 'decencyPolicyModuleResults'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyPolicyModuleResultsCalls $ decencyPolicyModuleResultsLastUpdate $ decencyPolicyModuleResultsModule $ decencyPolicyModuleResultsPeriod $ decencyPolicyModuleResultsStart $ decencyPolicyModuleResultsStatus ) )
+
+objectclass ( decencyClassOID:99.4.3.2.0.29 NAME 'decencyPolicyFinalState'
+    SUP top STRUCTURAL
+    MUST ( cn $ decencyPolicyFinalStateAmount $ decencyPolicyFinalStatePeriod $ decencyPolicyFinalStateStart $ decencyPolicyFinalStateStatus ) )
+

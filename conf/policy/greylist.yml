@@ -1,0 +1,9 @@
+---
+disable: 0
+maintenance_ttl: 90d
+min_interval: 60
+recipient_domain_threshold: 5
+sender_domain_threshold: 10
+tables: []
+ignore_ip_if_validated: 1
+

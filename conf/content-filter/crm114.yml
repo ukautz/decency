@@ -1,0 +1,20 @@
+---
+cmd_check: /usr/share/crm114/mailreaver.crm --fileprefix=%user% -u %user% --report_only
+cmd_learn_ham: /usr/share/crm114/mailfilter.crm --fileprefix=%user% -u %user% --learngood
+cmd_learn_spam: /usr/share/crm114/mailfilter.crm --fileprefix=%user% -u %user% --learnspam
+cmd_unlearn_ham: /usr/share/crm114/mailfilter.crm --fileprefix=%user% -u %user% --learnspam
+cmd_unlearn_spam: /usr/share/crm114/mailfilter.crm --fileprefix=%user% -u %user% --learngood
+default_user: /var/spool/crm114/
+disable: 0
+max_size: 0
+timeout: 30
+weight_innocent: 10
+weight_spam: -50
+weight_translate:
+  -10: -100
+  -2: 0
+  -3: -50
+  0: 0
+  1: 10
+  5: 20
+

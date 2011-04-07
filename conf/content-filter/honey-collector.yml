@@ -1,0 +1,7 @@
+---
+
+disable: 0
+
+train: 0
+
+archive_dir: /var/spool/decency/honey/

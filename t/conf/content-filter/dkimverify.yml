@@ -1,0 +1,20 @@
+---
+
+disable: 0
+
+# signature present and fitting
+weight_pass: 44
+
+# signature present, but incorrect
+weight_fail: -11
+
+# signature malformed .. cannot be processed
+weight_invalid: -22
+
+# some temporary error occured. Probably nothing bad
+weight_temperror: -33
+
+# no key whats-o-ever found in mail, cannot verify
+weight_none: 7
+
+

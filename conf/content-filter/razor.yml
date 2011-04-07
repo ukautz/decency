@@ -1,0 +1,6 @@
+---
+
+disable: 0
+
+#cmd_check: '/usr/bin/razor-check %file%'
+

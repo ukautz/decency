@@ -1,0 +1,35 @@
+---
+
+exclusions:
+    
+    modules:
+        
+        DNSBL:
+            sender_domain:
+                - sender.tld
+                - somedomain.tld
+            recipient_domain:
+                - recipient.tld
+                - anotherdomain.tld
+            sender_address:
+                - some@sender.tld
+            recipient_address:
+                - bla@recipient.tld
+    
+    # modules:
+        
+    #     DNSBL:
+    #         sender_domain:
+    #             - sender.tld
+    #             - somedomain.tld
+    #         recipient_domain:
+    #             - recipient.tld
+    #             - anotherdomain.tld
+    #         sender_address:
+    #             - some@sender.tld
+    #         recipient_address:
+    #             - bla@recipient.tld
+    
+    # file: /etc/decency/exclusions.txt
+    
+    # database: 1

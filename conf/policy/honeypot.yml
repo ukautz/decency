@@ -1,0 +1,8 @@
+---
+addresses: []
+disable: 0
+domains:
+  - sadsadsadsad.de
+reject_message: Your host ip is blacklisted
+welcome_message: The honey has been served
+

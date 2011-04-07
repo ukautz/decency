@@ -1,0 +1,35 @@
+---
+
+disable: 0
+#max_size: 0
+#timeout: 30
+
+# enable stream log
+stream_log: 1
+
+# user defined accumulations
+accumulate:
+
+    # cumulate stats per sender domain and status (reject/delivered)
+    -
+        contents:
+            - to_domain
+            - status
+        periods:
+            - daily
+            - weekly
+            - monthly
+            - yearly
+            - total
+    
+    # Totals
+    -
+        contents:
+            - status
+        periods:
+            - daily
+            - weekly
+            - monthly
+            - yearly
+            - total
+        
