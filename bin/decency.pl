@@ -8,7 +8,12 @@ use FindBin qw/ $Bin /;
 BEGIN {
     
     # check all available dirs
-    foreach my $dir( ( '/opt/decency/lib', '/opt/decency/locallib', "$Bin/../lib" ) ) {
+    foreach my $dir( (
+        '/opt/decency/lib',
+        '/opt/decency/locallib',
+        '/opt/decency/locallib/lib/perl5',
+        "$Bin/../lib"
+    ) ) {
         -d $dir && eval 'use lib "'. $dir. '"';
     }
     
@@ -70,10 +75,10 @@ die <<HELP if $opt{ help };
 
 Usage: $0 --class <classname> --config <configfile> --pidfile <pidfile>
 
-    --class | -a <policy|content-filter|syslog-parser>
+    --class | -a <doorman|detective>
         What kind of server to start ?
-            policy = Mail::Decency::Policy
-            content-filter = Mail::Decency::ContentFilter
+            doorman = Mail::Decency::Doorman
+            detective = Mail::Decency::Detective
             log-parser = Mail::Decency::LogParser
     
     --config | -c <file>
@@ -141,7 +146,7 @@ Usage: $0 --class <classname> --config <configfile> --pidfile <pidfile>
         before. Default is additive.
     
     --train-(spam|ham) <files>
-        For content filter only. Provide a list of files (eg /tmp/spam/*) which will
+        For Detective only. Provide a list of files (eg /tmp/spam/*) which will
         then be passed to the training methods of the enabled spam filters.
     
     --train-move <dir>
@@ -156,8 +161,8 @@ Usage: $0 --class <classname> --config <configfile> --pidfile <pidfile>
 HELP
 
 # check required parameters
-die "Provide --class <policy|content-filter|log-parser>\n"
-    unless $opt{ class } && $opt{ class } =~ /^(?:policy|content\-filter|log\-parser)$/;
+die "Provide --class <doorman|detective>\n"
+    unless $opt{ class } && $opt{ class } =~ /^(?:doorman|detective)$/;
 
 # switch user / group
 ( $opt{ user }, $opt{ group } ) = switch_user_group( $opt{ user }, $opt{ group } );
@@ -167,7 +172,7 @@ $opt{ config } = sprintf( $opt{ config }, $opt{ class } )
     if $opt{ config } =~ /\%s/;
 
 # cannot read from config
-die "Can't read from policy config file: $opt{ config }\n"
+die "Can't read from doorman config file: $opt{ config }\n"
     unless -f $opt{ config };
 
 # assure we have any pid file
@@ -175,9 +180,8 @@ $opt{ pid } ||= "/tmp/$opt{ class }.pid";
 
 # use class
 my %map = qw/
-    policy          Policy
-    content-filter  ContentFilter
-    log-parser      LogParser
+    doorman    Doorman
+    detective  Detective
 /;
 
 # check wheter we can load the server class
@@ -201,7 +205,7 @@ $ENV{ DECENCY_CONSOLE_LOG } = $opt{ daemon } ? 0 : 1;
 $ENV{ DECENCY_LOG_LEVEL }   = $opt{ log_level } || 0;
 
 # not server mode ? (training, maintenance, stats, ..)
-my $server_mode = ! ( $opt{ maintenance } || $opt{ print_stats } || $opt{ print_sql } || $opt{ export } || $opt{ import } || ( $opt{ class } eq 'content-filter' && ( $opt{ train_spam } || $opt{ train_ham } ) ) );
+my $server_mode = ! ( $opt{ maintenance } || $opt{ print_stats } || $opt{ print_sql } || $opt{ export } || $opt{ import } || ( $opt{ class } eq 'detective' && ( $opt{ train_spam } || $opt{ train_ham } ) ) );
 
 # enable console log more beautful, if we run server but no daemon
 $ENV{ DECENCY_CONSOLE_LOG_FULL } = ! $server_mode || ( $server_mode && ! $opt{ daemon } && ! $opt{ check } );
@@ -285,7 +289,7 @@ elsif ( $opt{ maintenance } || $opt{ print_stats } || $opt{ print_sql } || $opt{
     }
 }
 
-elsif ( $opt{ class } eq 'content-filter' && ( $opt{ train_spam } || $opt{ train_ham } ) ) {
+elsif ( $opt{ class } eq 'detective' && ( $opt{ train_spam } || $opt{ train_ham } ) ) {
     
     # train SPAM
     $server->train( {

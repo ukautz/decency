@@ -9,7 +9,7 @@
 #
 
 if [ -z $1 ]; then
-    echo "Usage: $0 [policy|content-filter|log-parser] [start|stop|status|restart|install|uninstall]"
+    echo "Usage: $0 [doorman|detective] [start|stop|status|restart|install|uninstall]"
     exit 1
 fi
 

@@ -11,7 +11,7 @@ use Sys::Syslog qw/ :standard :macros /;
 
 =head1 NAME
 
-Mail::Decency::ContentFilter::Reporting
+Mail::Decency::Detective::Reporting
 
 =head1 DESCRIPTION
 
@@ -32,7 +32,7 @@ Unix timestamp
 
 =item * server
 
-Either p for policy or c for content filter
+Either p for Doorman (policy server) or c for Detective (content filter)
 
 =item * from, to
 
@@ -54,25 +54,25 @@ Positive answer (mail not rejectd)
 
 Aquivalent to DUNNO
 
-=item * ok (policy)
+=item * ok (Doorman)
 
 Positive answer (mail not rejectd)
 
 Accepted
 
-=item * prepend (policy)
+=item * prepend (Doorman)
 
 Positive answer (mail not rejectd)
 
 =item * spam
 
-Mail is spam. In policy this means (depending on your configuration) rejected. In content filter, this can mean either deleted or delivererd.
+Mail is spam. In Doorman this means (depending on your configuration) rejected. In Detective, this can mean either deleted or delivererd.
 
-=item * virus (content filter)
+=item * virus (Detective)
 
 Mail is marked as virus. Probably deleted or quarantained
 
-=item * drop (content filter)
+=item * drop (Detective)
 
 A module (eg Archive) decided to drop the mail silently
 

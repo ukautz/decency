@@ -20,7 +20,7 @@ Meta base class for most deceny modules.
 
 =head1 CLASS ATTRIBUTES
 
-See L<Mail::Decency::Policy::Core>
+See L<Mail::Decency::Doorman::Core>
 
 =cut
 

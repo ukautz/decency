@@ -21,10 +21,6 @@ has quote_char => ( is => 'rw', isa => 'Str', default => q{"} );
 sub BUILD {
     my ( $self ) = @_;
     
-    $self->{ sql } = SQL::Abstract::Limit ->new(
-        #quote_char=> $self->quote_char
-    );
-    
     eval {
         # connect via fork save connector
         my @args = @{ $self->args };
@@ -35,6 +31,11 @@ sub BUILD {
         $self->{ db } = $dbh;
     };
     die "Error creating DBD insances: $@\n" if $@;
+    
+    $self->{ sql } = SQL::Abstract::Limit ->new(
+        #quote_char=> $self->quote_char
+        limit_dialect => $self->{ db }->dbh
+    );
     
     return $self;
 }
@@ -74,12 +75,12 @@ sub search_handle {
         ( $stm, @bind ) = $self->sql->select(
             "${schema}_${table}" => [ '*' ],
             $search_ref,
-            $self->update_order( $args_ref->{ order } ),
-            $args_ref->{ limit },
-            $args_ref->{ offset }
+            $self->update_order( $args_ref->{ order } ) || {},
+            $args_ref->{ limit } ||= 0,
+            $args_ref->{ offset } ||= 0
         );
+        $ENV{ PRINT_SQL } && warn "SQL> $stm (@bind)\n";
         $sth = $self->db->dbh->prepare_cached( $stm );
-        $ENV{ PRINT_SQL } && print "SQL> $stm (@bind)\n";
         $sth->execute( @bind );
     };
     if ( my $db_err = ( $@ || $DBI::errstr ) ) {
@@ -113,12 +114,12 @@ sub search_read {
         my ( $stm, @bind ) = $self->sql->select(
             "${schema}_${table}" => [ '*' ],
             $search_ref,
-            $self->update_order( $args_ref->{ order } ),
-            $args_ref->{ limit },
-            $args_ref->{ offset }
+            $self->update_order( $args_ref->{ order } ) || {},
+            $args_ref->{ limit } ||= 0,
+            $args_ref->{ offset } ||= 0
         );
         $sth = $self->db->dbh->prepare_cached( $stm );
-        $ENV{ PRINT_SQL } && print "SQL> $stm (@bind)\n";
+        $ENV{ PRINT_SQL } && warn "SQL> $stm (@bind)\n";
         $sth->execute( @bind );
     };
     die "Database error: $DBI::errstr\n" if $DBI::errstr;
@@ -198,7 +199,7 @@ sub set_handle {
     
     # exec ..
     eval {
-        $ENV{ PRINT_SQL } && print "SQL> $stm (@bind)\n";
+        $ENV{ PRINT_SQL } && warn "SQL> $stm (@bind)\n";
         my $sth = $self->db->dbh->prepare( $stm );
         $sth->execute( @bind );
         #$self->db->dbh->commit;
@@ -230,7 +231,7 @@ sub count {
             $search_ref
         );
         my $sth = $self->db->dbh->prepare_cached( $stm );
-        $ENV{ PRINT_SQL } && print "SQL> $stm (@bind)\n";
+        $ENV{ PRINT_SQL } && warn "SQL> $stm (@bind)\n";
         $sth->execute( @bind );
         
         ( $count ) = $sth->fetchrow_array();
@@ -306,7 +307,7 @@ sub distinct {
     
     $self->read_lock;
     eval {
-        $ENV{ PRINT_SQL } && print "SQL> $stm (@bind)\n";
+        $ENV{ PRINT_SQL } && warn "SQL> $stm (@bind)\n";
         $sth->execute( @bind );
     };
     
@@ -338,7 +339,7 @@ sub remove_handle {
     eval {
         my ( $stm, @bind ) = $self->sql->delete( "${schema}_${table}" => $search_ref );
         my $sth = $self->db->dbh->prepare( $stm );
-        $ENV{ PRINT_SQL } && print "SQL> $stm (@bind)\n";
+        $ENV{ PRINT_SQL } && warn "SQL> $stm (@bind)\n";
         $sth->execute( @bind );
     };
     if ( $@ || $DBI::errstr ) {
@@ -367,7 +368,7 @@ sub ping_handle {
     eval {
         my $sth = $self->db->dbh->prepare( $stm );
         if ( $sth ) {
-            $ENV{ PRINT_SQL } && print "SQL> $stm\n";
+            $ENV{ PRINT_SQL } && warn "SQL> $stm\n";
             $sth->execute;
             my ( $amount ) = $sth->fetchrow_array;
         }
@@ -393,11 +394,23 @@ sub setup_handle {
     my ( @columns, @indices, @uniques ) = ();
     while( my ( $name, $ref ) = each %$columns_ref ) {
         if ( $name eq '-index' ) {
-            my $idx = join( "_", @{ $columns_ref->{ -index } } );
-            push @indices, [
-                "${schema}_${table}_${idx} ON ${schema}_${table}",
-                $columns_ref->{ -index }
-            ];
+            my @index = @{ $columns_ref->{ -index } };
+            if ( ref( $index[0] ) ) {
+                foreach my $idx_ref( @index ) {
+                    my $idx = join( "_", @$idx_ref );
+                    push @indices, [
+                        "${schema}_${table}_${idx} ON ${schema}_${table}",
+                        $idx_ref
+                    ];
+                }
+            }
+            else {
+                my $idx = join( "_", @index );
+                push @indices, [
+                    "${schema}_${table}_${idx} ON ${schema}_${table}",
+                    \@index
+                ];
+            }
         }
         elsif ( $name eq '-unique' ) {
             my $idx = join( "_", @{ $columns_ref->{ -unique } } );
@@ -446,7 +459,7 @@ sub setup_handle {
     else {
         foreach my $stm( @stm ) {
             eval {
-                $ENV{ PRINT_SQL } && print "SQL> $stm\n";
+                $ENV{ PRINT_SQL } && warn "SQL> $stm\n";
                 $self->db->dbh->do( "$stm;" );
             };
             if ( $@ || $DBI::errstr ) {
@@ -508,7 +521,7 @@ sub update_query {
         my $type = ref( $k );
         if ( ! $type && $query_ref->{ $k } =~ /^(.+?)(?<!\\)\*$/ ) {
             my $v = $1;
-            $query_ref->{ $k } = "$v\%";
+            $query_ref->{ $k } = { like => "$v\%" };
         }
     }
     

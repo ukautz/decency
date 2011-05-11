@@ -2,7 +2,6 @@
 
 use strict;
 use Test::More;
-use Mail::Decency::Helper::Cache;
 use FindBin qw/ $Bin /;
 use lib "$Bin/lib";
 use lib "$Bin/../lib";
@@ -12,7 +11,7 @@ use MD_Misc;
 
 my $server;
 BEGIN { 
-    $server = init_server( 'Policy', {
+    $server = init_server( 'Doorman', {
         exclusions => {
             database => 1,
             modules  => {
@@ -39,7 +38,7 @@ my $module = init_module( $server, Honeypot => {} => {
 # create records
 CREATE_RECORDS: {
     eval {
-        $server->database->set( exclusions => policy => {
+        $server->database->set( exclusions => doorman => {
             type   => 'from_domain',
             module => 'honeypot',
             value  => 'ignoreme.tld'

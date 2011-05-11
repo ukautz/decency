@@ -1,8 +1,0 @@
----
-
-disable: 0
-interval_formats:
-    - 'year-%Y'
-    - 'week-%Y-%U'
-    - 'month-%Y-%m'
-

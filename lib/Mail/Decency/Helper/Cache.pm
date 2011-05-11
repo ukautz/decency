@@ -14,7 +14,7 @@ Mail::Decency::Helper
 
 =head1 DESCRIPTION
 
-Helper modules for Decency policies or content filters
+Helper modules for Decency policies or Detective
 
 =cut
 

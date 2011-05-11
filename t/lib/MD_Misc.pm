@@ -18,6 +18,11 @@ BEGIN {
     }
     eval 'use IPC::SysV qw/ IPC_PRIVATE IPC_CREAT S_IRWXU /; 1;'
         or BAIL_OUT "Cannot load IPC::SysV which is required for testing:";
+    unless ( -d "$Bin/data" ) {
+        mkdir "$Bin/data";
+        BAIL_OUT "Cannot create temp '$Bin/data' directory"
+            unless -d "$Bin/data";
+    }
 }
 
 $ENV{ NO_DB_DISCONNECT } = 1;
@@ -30,14 +35,14 @@ our @EXPORT = qw/
 /;
 
 our %INFO = (
-    ContentFilter => {
-        config_file => 'content-filter',
+    Detective => {
+        config_file => 'detective',
         create      => {
-            spool_dir => "$Bin/data/spool-dir"
+            spool_dir => "$Bin/data/spool-dir",
         }
     },
-    Policy => {
-        config_file => 'policy',
+    Doorman => {
+        config_file => 'doorman',
         create      => {}
     }
 );
@@ -106,8 +111,8 @@ sub init_server {
         class => "Memory",
     };
     $config_ref->{ config_dir } = "$Bin/conf";
-    $config_ref->{ $_ } = $INFO{ $server_class }->{ $_ }
-        for keys %{ $INFO{ $server_class } };
+    $config_ref->{ $_ } = $INFO{ $server_class }->{ create }->{ $_ }
+        for keys %{ $INFO{ $server_class }->{ create } ||= {} };
     
     # unless ( $class->does( '_RoleCleanup' ) ) {
     #     Mouse::Util::apply_all_roles( $class, qw/ _RoleCleanup / );
@@ -131,7 +136,7 @@ sub init_module {
     $extend_ref ||= {};
     $create_ref ||= {};
     
-    if ( $module_name =~ /^Dummy(Policy|ContentFilter)(.+?)$/ ) {
+    if ( $module_name =~ /^Dummy(Doorman|Detective)(.+?)$/ ) {
         my ( $n1, $n2 ) = ( $1, $2 );
         my $module_class = "DummyModule::${n1}${n2}";
         eval "use $module_class; 1;"
@@ -230,7 +235,7 @@ sub get_semaphore {
 sub session_init {
     my ( $server, @args ) = @_;
     
-    if ( ref( $server ) =~ /::Policy$/ ) {
+    if ( ref( $server ) =~ /::Doorman$/ ) {
         my ( $attrs_ref ) = @args;
         $attrs_ref ||= {};
         
@@ -252,7 +257,8 @@ sub session_init {
             or die "Cannot open '$testmail' for read: $!";
         
         # new temp file
-        my $temp_file = "$Bin/data/tempmail-1234";
+        srand;
+        my $temp_file = $server->spool_dir. "/temp/mail-". time(). "-". int( rand() * 10000 );
         open my $th, '>', $temp_file
             or die "Canot open temp file '$temp_file' for write: $!";
         
@@ -282,12 +288,8 @@ sub cleanup_server {
     
     cleanup_database( $server );
     
-    if ( $server->isa( 'Mail::Decency::ContentFilter' ) ) {
+    if ( $server->isa( 'Mail::Decency::Detective' ) ) {
         rmtree( $server->spool_dir );
-    }
-    
-    if ( $server->isa( 'Mail::Decency::LogParser' ) ) {
-        unlink( "$Bin/data/test.log" );
     }
 }
 
@@ -417,7 +419,7 @@ sub ok_mime_header {
     my ( $module, $header, $sub_check, $message ) = @_;
     
     # testing output dir
-    my $mime_dir = "$Bin/data/mime-temp";
+    my $mime_dir = $module->server->spool_dir. '/temp/mime-temp';
     mkdir( $mime_dir )
         or die "Cannot make temp mime dir '$mime_dir'\n"
         unless -d $mime_dir;

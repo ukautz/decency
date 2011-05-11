@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use Test::More tests => 34;
+use Test::More tests => 35;
 
 #
 # VERSION 0.1.6
@@ -20,6 +20,7 @@ BEGIN {
         File::Temp    0
         IO::String    0
         IO::YAML    0.08
+        Mail::Field::Received   0
         MIME::Lite    0
         MIME::Parser    0
         MIME::QuotedPrint    0

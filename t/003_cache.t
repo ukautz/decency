@@ -2,10 +2,10 @@
 
 use strict;
 use Test::More tests => 4;
-use Mail::Decency::Helper::Cache;
 use FindBin qw/ $Bin /;
 use lib "$Bin/lib";
 use lib "$Bin/../lib";
+use Mail::Decency::Helper::Cache;
 
 
 SKIP: {

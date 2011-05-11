@@ -434,9 +434,9 @@ sub handle_conn_error {
     
     my $name = __id_name( $heap, $session );
     
-    # disconnect ..
+    # disconnect or reset ..
     my $cleanup_msg;
-    if ( $operation eq 'read' && $errnum == 0 ) {
+    if ( $operation eq 'read' && ( $errnum == 0 || $errnum == 104 ) ) {
         $heap->{ logger }->debug3( "Postfix closed connection" );
         $cleanup_msg = 'CLOSE';
     }

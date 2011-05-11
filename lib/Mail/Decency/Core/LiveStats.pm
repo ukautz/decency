@@ -18,11 +18,11 @@ our %DATE_FORMATS = (
 
 =head1 NAME
 
-Mail::Decency::ContentFilter::LiveStats
+Mail::Decency::Detective::LiveStats
 
 =head1 DESCRIPTION
 
-Base class for L<Mail::Decency::ContentFilter::LiveStats> and L<Mail::Decency::Policy::LiveStats>.
+Base class for L<Mail::Decency::Detective::LiveStats> and L<Mail::Decency::Doorman::LiveStats>.
 
 Save statistical informations about throuput in a database.
 

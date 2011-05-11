@@ -27,8 +27,7 @@ Mail::Decency::Core::Server
 
 =head1 DESCRIPTION
 
-Base module for all decency servers (policy, content filter, syslog parser).
-
+Base module for all decency servers (Doorman, Detective).
 
 =head1 CLASS ATTRIBUTES
 
@@ -357,7 +356,7 @@ sub gen_child {
             last;
         };
     }
-    die "Missing policy module '$name' (tried: ". join( ', ', @module_classes ). ")\n"
+    die "Missing Doorman module '$name' (tried: ". join( ', ', @module_classes ). ")\n"
         unless $module;
     
     # create instance of sub module
@@ -491,7 +490,7 @@ sub handle_child {
         
         # check size.. if to big for filter -> don't handle
         if (
-            $child->can( 'Mail::Decency::ContentFilter::Core' )
+            $child->can( 'Mail::Decency::Detective::Core' )
             && $child->can( 'max_size' )
             && $child->max_size
             && $self->session->file_size > $child->max_size

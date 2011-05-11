@@ -2,7 +2,6 @@
 
 use strict;
 use Test::More;
-use Mail::Decency::Helper::Cache;
 use FindBin qw/ $Bin /;
 use lib "$Bin/lib";
 use lib "$Bin/../lib";
@@ -18,9 +17,9 @@ BEGIN {
 }
 
 my @tests = (
-    [ DummyPolicyOK => 'Module: DummyPolicyOK; Score: 0; All good, all the time' => 'ok', qr/^OK$/ ],
-    [ DummyPolicyDUNNO => 'Module: DummyPolicyDUNNO; Score: 0; I dont know' => 'ongoing', qr/^PREPEND / ],
-    [ DummyPolicyREJECT => 'Module: DummyPolicyREJECT; Score: 0; Dont like it, dont want it' => 'spam', qr/^REJECT / ]
+    [ DummyDoormanOK => 'Module: DummyDoormanOK; Score: 0; All good, all the time' => 'ok', qr/^OK$/ ],
+    [ DummyDoormanDUNNO => 'Module: DummyDoormanDUNNO; Score: 0; I dont know' => 'ongoing', qr/^PREPEND / ],
+    [ DummyDoormanREJECT => 'Module: DummyDoormanREJECT; Score: 0; Dont like it, dont want it' => 'spam', qr/^REJECT / ]
 );
 
 my $locker = get_semaphore();
@@ -36,7 +35,7 @@ foreach my $test_ref( @tests ) {
 sub test_answer {
     my ( $module_name, $report_info, $report_state, $action_rx ) = @_;
     
-    my $server = init_server( 'Policy', {
+    my $server = init_server( 'Doorman', {
         reporting => {
             file => $reporting_file
         },
@@ -44,8 +43,8 @@ sub test_answer {
     
     my $attrs_ref = {
         client_address => '1.1.1.1',
-        sender         => "from\@sender.tld",
-        recipient      => "to\@recipient.tld",
+        sender         => 'from@sender.tld',
+        recipient      => 'to@recipient.tld',
     };
     
     my $module = init_module( $server, $module_name )

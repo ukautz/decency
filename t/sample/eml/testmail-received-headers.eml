@@ -1,0 +1,37 @@
+From: Sender Name <sender@domain.tld>
+Received: from mail-bw0-f49.google.com (mail-bw0-f49.google.com [209.85.214.49])
+	by mail.service.frbit.de (Postfix) with ESMTP id 89BFA1A44A
+	for <uk@fortrabbit.de>; Sun, 19 Dec 2010 02:46:33 +0100 (CET)
+Received: by bwz5 with SMTP id 5so2291881bwz.36
+        for <uk@fortrabbit.de>; Sat, 18 Dec 2010 17:45:08 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.service.frbit.de (Postfix) with SMTP id A42DD1A28B
+	for <uk@fortrabbit.de>; Mon, 18 Apr 2011 11:02:44 +0200 (CEST)
+Received: from web.heise.de (web.heise.de [193.99.144.71])
+	by mail.service.frbit.de (Postfix) with ESMTP id 63B981A0F6
+	for <uk@fortrabbit.de>; Mon, 18 Apr 2011 11:02:44 +0200 (CEST)
+Received: from [192.168.30.100] (helo=web.heise.de)
+	by web.heise.de with esmtp (Exim 4.69)
+	(envelope-from <bounce_heisec-summary_uk=fortrabbit.de_0418@listserv.heise.de>)
+	id 1QBkLz-0005O9-JT
+	for uk@fortrabbit.de; Mon, 18 Apr 2011 11:02:43 +0200
+Received: from runwww by web.heise.de with local-bsmtp (Exim 4.69)
+	(envelope-from <bounce_heisec-summary_uk=fortrabbit.de_0418@listserv.heise.de>)
+	id 1QBk5H-0003o4-T2
+	for uk@fortrabbit.de; Mon, 18 Apr 2011 10:45:27 +0200
+
+Content-Type: text/plain;
+	charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
+Subject: This is the Subject
+X-Universally-Unique-Identifier: 12345678-1234-1234-1234-123456789012
+Date: Mon, 10 May 2010 18:01:01 +0200
+Message-Id: <12345678-1234-1234-1234-123456789012@domain.tld>
+To: Recipient Name <recipient@other-domain.tld>
+Mime-Version: 1.0 (Apple Message framework v1078)
+
+Hello yadda,
+
+This is my MIME MAIL
+
+

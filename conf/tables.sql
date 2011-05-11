@@ -85,22 +85,22 @@ CREATE TABLE THROTTLE_RECIPIENT_ADDRESS (maximum integer, account varchar(100), 
 CREATE UNIQUE INDEX THROTTLE_RECIPIENT_ADDRESS_RECIPIENT_ADDRESS_INTERVAL ON THROTTLE_RECIPIENT_ADDRESS (recipient_address, interval);
 
 
--- For: Mail::Decency::Policy=HASH(0x2ad2be0)
--- TABLE: stats_policy_response (SQLITE):
-CREATE TABLE STATS_POLICY_RESPONSE (period varchar(10), type varchar(32), start integer, module varchar(32), id INTEGER PRIMARY KEY);
-CREATE UNIQUE INDEX STATS_POLICY_RESPONSE_MODULE_PERIOD_START_TYPE ON STATS_POLICY_RESPONSE (module, period, start, type);
+-- For: Mail::Decency::Doorman=HASH(0x2ad2be0)
+-- TABLE: stats_doorman_response (SQLITE):
+CREATE TABLE STATS_DOORMAN_RESPONSE (period varchar(10), type varchar(32), start integer, module varchar(32), id INTEGER PRIMARY KEY);
+CREATE UNIQUE INDEX STATS_DOORMAN_RESPONSE_MODULE_PERIOD_START_TYPE ON STATS_DOORMAN_RESPONSE (module, period, start, type);
 
--- TABLE: stats_policy_performance (SQLITE):
-CREATE TABLE STATS_POLICY_PERFORMANCE (calls varchar(10), runtime real, period varchar(10), type varchar(32), start integer, module varchar(32), id INTEGER PRIMARY KEY);
-CREATE UNIQUE INDEX STATS_POLICY_PERFORMANCE_MODULE_PERIOD_START_TYPE ON STATS_POLICY_PERFORMANCE (module, period, start, type);
+-- TABLE: stats_doorman_performance (SQLITE):
+CREATE TABLE STATS_DOORMAN_PERFORMANCE (calls varchar(10), runtime real, period varchar(10), type varchar(32), start integer, module varchar(32), id INTEGER PRIMARY KEY);
+CREATE UNIQUE INDEX STATS_DOORMAN_PERFORMANCE_MODULE_PERIOD_START_TYPE ON STATS_DOORMAN_PERFORMANCE (module, period, start, type);
 
 
--- TABLE: stats_contentfilter_performance (SQLITE):
-CREATE TABLE STATS_CONTENTFILTER_PERFORMANCE (calls varchar(10), runtime real, period varchar(10), type varchar(32), start integer, module varchar(32), id INTEGER PRIMARY KEY);
-CREATE UNIQUE INDEX STATS_CONTENTFILTER_PERFORMANCE_MODULE_PERIOD_START_TYPE ON STATS_CONTENTFILTER_PERFORMANCE (module, period, start, type);
+-- TABLE: stats_detective_performance (SQLITE):
+CREATE TABLE STATS_DETECTIVE_PERFORMANCE (calls varchar(10), runtime real, period varchar(10), type varchar(32), start integer, module varchar(32), id INTEGER PRIMARY KEY);
+CREATE UNIQUE INDEX STATS_DETECTIVE_PERFORMANCE_MODULE_PERIOD_START_TYPE ON STATS_DETECTIVE_PERFORMANCE (module, period, start, type);
 
--- TABLE: stats_contentfilter_response (SQLITE):
-CREATE TABLE STATS_CONTENTFILTER_RESPONSE (period varchar(10), type varchar(32), start integer, module varchar(32), id INTEGER PRIMARY KEY);
-CREATE UNIQUE INDEX STATS_CONTENTFILTER_RESPONSE_MODULE_PERIOD_START_TYPE ON STATS_CONTENTFILTER_RESPONSE (module, period, start, type);
+-- TABLE: stats_DETECTIVE_response (SQLITE):
+CREATE TABLE STATS_DETECTIVE_RESPONSE (period varchar(10), type varchar(32), start integer, module varchar(32), id INTEGER PRIMARY KEY);
+CREATE UNIQUE INDEX STATS_DETECTIVE_RESPONSE_MODULE_PERIOD_START_TYPE ON STATS_DETECTIVE_RESPONSE (module, period, start, type);
 
 

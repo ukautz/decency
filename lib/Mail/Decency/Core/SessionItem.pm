@@ -9,7 +9,7 @@ Mail::Decency::Core::SessionItem
 
 =head1 DESCRIPTION
 
-Represents an session item for either policy or content filter.
+Represents an session item for either Doorman or Detective.
 Base class, don't instantiate!
 
 =head1 CLASS ATTRIBUTES

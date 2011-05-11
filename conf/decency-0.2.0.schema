@@ -253,136 +253,136 @@ attributetype ( decencyAttribOID:100.7.2.26 NAME 'decencyThrottleSenderDomainMax
 attributetype ( decencyAttribOID:100.7.2.27 NAME 'decencyThrottleSenderDomainSenderDomain'
     SUP decencyVarchar255 )
 
-attributetype ( decencyAttribOID:99.2.1.10.1 NAME 'decencyContentfilterExclusionsModule'
+attributetype ( decencyAttribOID:99.2.1.10.1 NAME 'decencyDetectiveExclusionsModule'
     SUP decencyVarchar32 )
 
-attributetype ( decencyAttribOID:99.2.1.11.1 NAME 'decencyContentfilterExclusionsType'
+attributetype ( decencyAttribOID:99.2.1.11.1 NAME 'decencyDetectiveExclusionsType'
     SUP decencyVarchar20 )
 
-attributetype ( decencyAttribOID:99.2.1.12.1 NAME 'decencyContentfilterExclusionsValue'
+attributetype ( decencyAttribOID:99.2.1.12.1 NAME 'decencyDetectiveExclusionsValue'
     SUP decencyVarchar255 )
 
-attributetype ( decencyAttribOID:99.3.1.10.1 NAME 'decencyContentfilterCustomScoringRecipient'
+attributetype ( decencyAttribOID:99.3.1.10.1 NAME 'decencyDetectiveCustomScoringRecipient'
     SUP decencyVarchar255 )
 
-attributetype ( decencyAttribOID:99.3.1.11.1 NAME 'decencyContentfilterCustomScoringValue'
+attributetype ( decencyAttribOID:99.3.1.11.1 NAME 'decencyDetectiveCustomScoringValue'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.1.1.10.1 NAME 'decencyContentfilterModulePerformanceCalls'
+attributetype ( decencyAttribOID:99.4.1.1.10.1 NAME 'decencyDetectiveModulePerformanceCalls'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.1.1.11.1 NAME 'decencyContentfilterModulePerformanceLastUpdate'
+attributetype ( decencyAttribOID:99.4.1.1.11.1 NAME 'decencyDetectiveModulePerformanceLastUpdate'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.1.1.12.1 NAME 'decencyContentfilterModulePerformanceModule'
+attributetype ( decencyAttribOID:99.4.1.1.12.1 NAME 'decencyDetectiveModulePerformanceModule'
     SUP decencyVarchar32 )
 
-attributetype ( decencyAttribOID:99.4.1.1.13.1 NAME 'decencyContentfilterModulePerformancePeriod'
+attributetype ( decencyAttribOID:99.4.1.1.13.1 NAME 'decencyDetectiveModulePerformancePeriod'
     SUP decencyVarchar10 )
 
-attributetype ( decencyAttribOID:99.4.1.1.14.1 NAME 'decencyContentfilterModulePerformanceRuntime'
+attributetype ( decencyAttribOID:99.4.1.1.14.1 NAME 'decencyDetectiveModulePerformanceRuntime'
     SUP decencyReal )
 
-attributetype ( decencyAttribOID:99.4.1.1.15.1 NAME 'decencyContentfilterModulePerformanceScore'
+attributetype ( decencyAttribOID:99.4.1.1.15.1 NAME 'decencyDetectiveModulePerformanceScore'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.1.1.16.1 NAME 'decencyContentfilterModulePerformanceStart'
+attributetype ( decencyAttribOID:99.4.1.1.16.1 NAME 'decencyDetectiveModulePerformanceStart'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.2.1.10.1 NAME 'decencyContentfilterModuleResultsCalls'
+attributetype ( decencyAttribOID:99.4.2.1.10.1 NAME 'decencyDetectiveModuleResultsCalls'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.2.1.11.1 NAME 'decencyContentfilterModuleResultsLastUpdate'
+attributetype ( decencyAttribOID:99.4.2.1.11.1 NAME 'decencyDetectiveModuleResultsLastUpdate'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.2.1.12.1 NAME 'decencyContentfilterModuleResultsModule'
+attributetype ( decencyAttribOID:99.4.2.1.12.1 NAME 'decencyDetectiveModuleResultsModule'
     SUP decencyVarchar32 )
 
-attributetype ( decencyAttribOID:99.4.2.1.13.1 NAME 'decencyContentfilterModuleResultsPeriod'
+attributetype ( decencyAttribOID:99.4.2.1.13.1 NAME 'decencyDetectiveModuleResultsPeriod'
     SUP decencyVarchar10 )
 
-attributetype ( decencyAttribOID:99.4.2.1.14.1 NAME 'decencyContentfilterModuleResultsStart'
+attributetype ( decencyAttribOID:99.4.2.1.14.1 NAME 'decencyDetectiveModuleResultsStart'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.2.1.15.1 NAME 'decencyContentfilterModuleResultsStatus'
+attributetype ( decencyAttribOID:99.4.2.1.15.1 NAME 'decencyDetectiveModuleResultsStatus'
     SUP decencyVarchar32 )
 
-attributetype ( decencyAttribOID:99.4.3.1.10.1 NAME 'decencyContentfilterFinalStateAmount'
+attributetype ( decencyAttribOID:99.4.3.1.10.1 NAME 'decencyDetectiveFinalStateAmount'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.3.1.11.1 NAME 'decencyContentfilterFinalStatePeriod'
+attributetype ( decencyAttribOID:99.4.3.1.11.1 NAME 'decencyDetectiveFinalStatePeriod'
     SUP decencyVarchar25 )
 
-attributetype ( decencyAttribOID:99.4.3.1.12.1 NAME 'decencyContentfilterFinalStateStart'
+attributetype ( decencyAttribOID:99.4.3.1.12.1 NAME 'decencyDetectiveFinalStateStart'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.3.1.13.1 NAME 'decencyContentfilterFinalStateStatus'
+attributetype ( decencyAttribOID:99.4.3.1.13.1 NAME 'decencyDetectiveFinalStateStatus'
     SUP decencyVarchar10 )
 
-attributetype ( decencyAttribOID:99.2.2.10.1 NAME 'decencyPolicyExclusionsModule'
+attributetype ( decencyAttribOID:99.2.2.10.1 NAME 'decencyDoormanExclusionsModule'
     SUP decencyVarchar32 )
 
-attributetype ( decencyAttribOID:99.2.2.11.1 NAME 'decencyPolicyExclusionsType'
+attributetype ( decencyAttribOID:99.2.2.11.1 NAME 'decencyDoormanExclusionsType'
     SUP decencyVarchar20 )
 
-attributetype ( decencyAttribOID:99.2.2.12.1 NAME 'decencyPolicyExclusionsValue'
+attributetype ( decencyAttribOID:99.2.2.12.1 NAME 'decencyDoormanExclusionsValue'
     SUP decencyVarchar255 )
 
-attributetype ( decencyAttribOID:99.3.2.10.1 NAME 'decencyPolicyCustomScoringRecipient'
+attributetype ( decencyAttribOID:99.3.2.10.1 NAME 'decencyDoormanCustomScoringRecipient'
     SUP decencyVarchar255 )
 
-attributetype ( decencyAttribOID:99.3.2.11.1 NAME 'decencyPolicyCustomScoringValue'
+attributetype ( decencyAttribOID:99.3.2.11.1 NAME 'decencyDoormanCustomScoringValue'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.1.2.10.1 NAME 'decencyPolicyModulePerformanceCalls'
+attributetype ( decencyAttribOID:99.4.1.2.10.1 NAME 'decencyDoormanModulePerformanceCalls'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.1.2.11.1 NAME 'decencyPolicyModulePerformanceLastUpdate'
+attributetype ( decencyAttribOID:99.4.1.2.11.1 NAME 'decencyDoormanModulePerformanceLastUpdate'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.1.2.12.1 NAME 'decencyPolicyModulePerformanceModule'
+attributetype ( decencyAttribOID:99.4.1.2.12.1 NAME 'decencyDoormanModulePerformanceModule'
     SUP decencyVarchar32 )
 
-attributetype ( decencyAttribOID:99.4.1.2.13.1 NAME 'decencyPolicyModulePerformancePeriod'
+attributetype ( decencyAttribOID:99.4.1.2.13.1 NAME 'decencyDoormanModulePerformancePeriod'
     SUP decencyVarchar10 )
 
-attributetype ( decencyAttribOID:99.4.1.2.14.1 NAME 'decencyPolicyModulePerformanceRuntime'
+attributetype ( decencyAttribOID:99.4.1.2.14.1 NAME 'decencyDoormanModulePerformanceRuntime'
     SUP decencyReal )
 
-attributetype ( decencyAttribOID:99.4.1.2.15.1 NAME 'decencyPolicyModulePerformanceScore'
+attributetype ( decencyAttribOID:99.4.1.2.15.1 NAME 'decencyDoormanModulePerformanceScore'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.1.2.16.1 NAME 'decencyPolicyModulePerformanceStart'
+attributetype ( decencyAttribOID:99.4.1.2.16.1 NAME 'decencyDoormanModulePerformanceStart'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.2.2.10.1 NAME 'decencyPolicyModuleResultsCalls'
+attributetype ( decencyAttribOID:99.4.2.2.10.1 NAME 'decencyDoormanModuleResultsCalls'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.2.2.11.1 NAME 'decencyPolicyModuleResultsLastUpdate'
+attributetype ( decencyAttribOID:99.4.2.2.11.1 NAME 'decencyDoormanModuleResultsLastUpdate'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.2.2.12.1 NAME 'decencyPolicyModuleResultsModule'
+attributetype ( decencyAttribOID:99.4.2.2.12.1 NAME 'decencyDoormanModuleResultsModule'
     SUP decencyVarchar32 )
 
-attributetype ( decencyAttribOID:99.4.2.2.13.1 NAME 'decencyPolicyModuleResultsPeriod'
+attributetype ( decencyAttribOID:99.4.2.2.13.1 NAME 'decencyDoormanModuleResultsPeriod'
     SUP decencyVarchar10 )
 
-attributetype ( decencyAttribOID:99.4.2.2.14.1 NAME 'decencyPolicyModuleResultsStart'
+attributetype ( decencyAttribOID:99.4.2.2.14.1 NAME 'decencyDoormanModuleResultsStart'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.2.2.15.1 NAME 'decencyPolicyModuleResultsStatus'
+attributetype ( decencyAttribOID:99.4.2.2.15.1 NAME 'decencyDoormanModuleResultsStatus'
     SUP decencyVarchar32 )
 
-attributetype ( decencyAttribOID:99.4.3.2.10.1 NAME 'decencyPolicyFinalStateAmount'
+attributetype ( decencyAttribOID:99.4.3.2.10.1 NAME 'decencyDoormanFinalStateAmount'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.3.2.11.1 NAME 'decencyPolicyFinalStatePeriod'
+attributetype ( decencyAttribOID:99.4.3.2.11.1 NAME 'decencyDoormanFinalStatePeriod'
     SUP decencyVarchar25 )
 
-attributetype ( decencyAttribOID:99.4.3.2.12.1 NAME 'decencyPolicyFinalStateStart'
+attributetype ( decencyAttribOID:99.4.3.2.12.1 NAME 'decencyDoormanFinalStateStart'
     SUP decencyInteger )
 
-attributetype ( decencyAttribOID:99.4.3.2.13.1 NAME 'decencyPolicyFinalStateStatus'
+attributetype ( decencyAttribOID:99.4.3.2.13.1 NAME 'decencyDoormanFinalStateStatus'
     SUP decencyVarchar10 )
 
 
@@ -466,43 +466,43 @@ objectclass ( decencyClassOID:100.7.1.19 NAME 'decencyThrottleSenderDomain'
     SUP top STRUCTURAL
     MUST ( cn $ decencyThrottleSenderDomainAccount $ decencyThrottleSenderDomainInterval $ decencyThrottleSenderDomainMaximum $ decencyThrottleSenderDomainSenderDomain ) )
 
-objectclass ( decencyClassOID:99.2.1.0.20 NAME 'decencyContentfilterExclusions'
+objectclass ( decencyClassOID:99.2.1.0.20 NAME 'decencyDetectiveExclusions'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyContentfilterExclusionsModule $ decencyContentfilterExclusionsType $ decencyContentfilterExclusionsValue ) )
+    MUST ( cn $ decencyDetectiveExclusionsModule $ decencyDetectiveExclusionsType $ decencyDetectiveExclusionsValue ) )
 
-objectclass ( decencyClassOID:99.3.1.0.21 NAME 'decencyContentfilterCustomScoring'
+objectclass ( decencyClassOID:99.3.1.0.21 NAME 'decencyDetectiveCustomScoring'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyContentfilterCustomScoringRecipient $ decencyContentfilterCustomScoringValue ) )
+    MUST ( cn $ decencyDetectiveCustomScoringRecipient $ decencyDetectiveCustomScoringValue ) )
 
-objectclass ( decencyClassOID:99.4.1.1.0.22 NAME 'decencyContentfilterModulePerformance'
+objectclass ( decencyClassOID:99.4.1.1.0.22 NAME 'decencyDetectiveModulePerformance'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyContentfilterModulePerformanceCalls $ decencyContentfilterModulePerformanceLastUpdate $ decencyContentfilterModulePerformanceModule $ decencyContentfilterModulePerformancePeriod $ decencyContentfilterModulePerformanceRuntime $ decencyContentfilterModulePerformanceScore $ decencyContentfilterModulePerformanceStart ) )
+    MUST ( cn $ decencyDetectiveModulePerformanceCalls $ decencyDetectiveModulePerformanceLastUpdate $ decencyDetectiveModulePerformanceModule $ decencyDetectiveModulePerformancePeriod $ decencyDetectiveModulePerformanceRuntime $ decencyDetectiveModulePerformanceScore $ decencyDetectiveModulePerformanceStart ) )
 
-objectclass ( decencyClassOID:99.4.2.1.0.23 NAME 'decencyContentfilterModuleResults'
+objectclass ( decencyClassOID:99.4.2.1.0.23 NAME 'decencyDetectiveModuleResults'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyContentfilterModuleResultsCalls $ decencyContentfilterModuleResultsLastUpdate $ decencyContentfilterModuleResultsModule $ decencyContentfilterModuleResultsPeriod $ decencyContentfilterModuleResultsStart $ decencyContentfilterModuleResultsStatus ) )
+    MUST ( cn $ decencyDetectiveModuleResultsCalls $ decencyDetectiveModuleResultsLastUpdate $ decencyDetectiveModuleResultsModule $ decencyDetectiveModuleResultsPeriod $ decencyDetectiveModuleResultsStart $ decencyDetectiveModuleResultsStatus ) )
 
-objectclass ( decencyClassOID:99.4.3.1.0.24 NAME 'decencyContentfilterFinalState'
+objectclass ( decencyClassOID:99.4.3.1.0.24 NAME 'decencyDetectiveFinalState'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyContentfilterFinalStateAmount $ decencyContentfilterFinalStatePeriod $ decencyContentfilterFinalStateStart $ decencyContentfilterFinalStateStatus ) )
+    MUST ( cn $ decencyDetectiveFinalStateAmount $ decencyDetectiveFinalStatePeriod $ decencyDetectiveFinalStateStart $ decencyDetectiveFinalStateStatus ) )
 
-objectclass ( decencyClassOID:99.2.2.0.25 NAME 'decencyPolicyExclusions'
+objectclass ( decencyClassOID:99.2.2.0.25 NAME 'decencyDoormanExclusions'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyPolicyExclusionsModule $ decencyPolicyExclusionsType $ decencyPolicyExclusionsValue ) )
+    MUST ( cn $ decencyDoormanExclusionsModule $ decencyDoormanExclusionsType $ decencyDoormanExclusionsValue ) )
 
-objectclass ( decencyClassOID:99.3.2.0.26 NAME 'decencyPolicyCustomScoring'
+objectclass ( decencyClassOID:99.3.2.0.26 NAME 'decencyDoormanCustomScoring'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyPolicyCustomScoringRecipient $ decencyPolicyCustomScoringValue ) )
+    MUST ( cn $ decencyDoormanCustomScoringRecipient $ decencyDoormanCustomScoringValue ) )
 
-objectclass ( decencyClassOID:99.4.1.2.0.27 NAME 'decencyPolicyModulePerformance'
+objectclass ( decencyClassOID:99.4.1.2.0.27 NAME 'decencyDoormanModulePerformance'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyPolicyModulePerformanceCalls $ decencyPolicyModulePerformanceLastUpdate $ decencyPolicyModulePerformanceModule $ decencyPolicyModulePerformancePeriod $ decencyPolicyModulePerformanceRuntime $ decencyPolicyModulePerformanceScore $ decencyPolicyModulePerformanceStart ) )
+    MUST ( cn $ decencyDoormanModulePerformanceCalls $ decencyDoormanModulePerformanceLastUpdate $ decencyDoormanModulePerformanceModule $ decencyDoormanModulePerformancePeriod $ decencyDoormanModulePerformanceRuntime $ decencyDoormanModulePerformanceScore $ decencyDoormanModulePerformanceStart ) )
 
-objectclass ( decencyClassOID:99.4.2.2.0.28 NAME 'decencyPolicyModuleResults'
+objectclass ( decencyClassOID:99.4.2.2.0.28 NAME 'decencyDoormanModuleResults'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyPolicyModuleResultsCalls $ decencyPolicyModuleResultsLastUpdate $ decencyPolicyModuleResultsModule $ decencyPolicyModuleResultsPeriod $ decencyPolicyModuleResultsStart $ decencyPolicyModuleResultsStatus ) )
+    MUST ( cn $ decencyDoormanModuleResultsCalls $ decencyDoormanModuleResultsLastUpdate $ decencyDoormanModuleResultsModule $ decencyDoormanModuleResultsPeriod $ decencyDoormanModuleResultsStart $ decencyDoormanModuleResultsStatus ) )
 
-objectclass ( decencyClassOID:99.4.3.2.0.29 NAME 'decencyPolicyFinalState'
+objectclass ( decencyClassOID:99.4.3.2.0.29 NAME 'decencyDoormanFinalState'
     SUP top STRUCTURAL
-    MUST ( cn $ decencyPolicyFinalStateAmount $ decencyPolicyFinalStatePeriod $ decencyPolicyFinalStateStart $ decencyPolicyFinalStateStatus ) )
+    MUST ( cn $ decencyDoormanFinalStateAmount $ decencyDoormanFinalStatePeriod $ decencyDoormanFinalStateStart $ decencyDoormanFinalStateStatus ) )
 

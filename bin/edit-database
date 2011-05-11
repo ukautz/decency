@@ -15,7 +15,7 @@ Tool for manipulating (edit, delete, search) databases used by decency. It tries
     
     select database by decency config:
         
-        --class | -a [policy|content-filter|syslog-parser]
+        --class | -a [doorman|detective]
             which decency class to work on. required to read it's
             config file
         
@@ -192,11 +192,13 @@ use strict;
 use warnings;
 
 BEGIN {
-    if ( -d '/opt/decency/lib' ) {
-        use lib '/opt/decency/lib';
-    }
-    if ( -d '/opt/decency/locallib' ) {
-        use lib '/opt/decency/locallib';
+    foreach my $dir( (
+        '/opt/decency/lib',
+        '/opt/decency/locallib',
+        '/opt/decency/locallib/lib/perl5',
+        "$Bin/../lib"
+    ) ) {
+        -d $dir && eval 'use lib "'. $dir. '"';
     }
 }
 

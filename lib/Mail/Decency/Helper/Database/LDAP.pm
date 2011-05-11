@@ -24,10 +24,14 @@ use Net::LDAP::Util qw/
     escape_filter_value
     escape_dn_value
 /;
+use Net::LDAP::Constant qw( LDAP_CONTROL_PAGED LDAP_CONTROL_SORTRESULT );
+use Net::LDAP::Control::Paged;
+use Net::LDAP::Control::Sort;
 use Digest::SHA qw/ sha256_hex /;
 use constant {
     LDAP_REAL_PRECISION => 10_000
 };
+use Carp qw/ confess /;
 
 =head1 ATTRIBUTES
 
@@ -191,15 +195,48 @@ Returns read handle and read method name for massive read actions
 sub search_read {
     my ( $self, $schema, $table, $search_ref, $args_ref ) = @_;
     
+    # control (order, page) 
+    my ( @control ) = ();
+    
+    # control: limit
+    my $limit = $args_ref->{ offset } && $args_ref->{ limit }
+        ? ( $args_ref->{ offset } + $args_ref->{ limit } )
+        : ( $args_ref->{ limit } ? $args_ref->{ limit } : 0 )
+    ;
+    push @control, Net::LDAP::Control::Paged->new( size => $limit ) if $limit;
+    
+    # control: order
+    if ( $args_ref->{ order } ) {
+        my @order;
+        foreach my $order_ref( @{ $args_ref->{ order } } ) {
+            my $prefix = $order_ref->{ dir } eq 'asc' ? '-' : '';
+            push @order, $prefix. $order_ref->{ col };
+        }
+        push @control, Net::LDAP::Control::Sort->new( order => join( ' ', @order ) ) if @order;
+    }
+    
+    
     my $res = $self->db->search(
         base   => $self->_dn( $schema, $table ),
         scope  => 'one',
         filter => $self->update_query( $schema, $table, $search_ref ),
-        sizelimit => $search_ref->{ offset } && $search_ref->{ limit }
-            ? ( $args_ref->{ offset } + $args_ref->{ limit } )
-            : ( $args_ref->{ limit } ? $args_ref->{ limit } : 0 )
-        ,
+        ( @control ? ( control => \@control ) : () )
     );
+    
+    # if ( $args_ref->{ order } ) {
+    #     my( $check ) = $res->control( LDAP_CONTROL_SORTRESULT );
+    #     if ( $check ) {
+    #         if ( $check->result ) {
+    #             warn "Problem sorting ". $check->attr. ": ". $check->result. "\n";
+    #         }
+    #         else {
+    #             warn "SORT OK\n";
+    #         }
+    #     }
+    #     else {
+    #         warn "Cannot sort\n";
+    #     }
+    # }
     
     bless $res, '_Net_LDAP_Search' unless ref( $res ) =~ /^_/;
     $res->{ ldap_key_map_reverse } = $self->ldap_key_map_reverse;
@@ -279,7 +316,7 @@ sub set_handle {
     }
     
     #
-    # UPSERT
+    # UPSERTz
     #   update existing or create new
     #
     else {
@@ -471,13 +508,15 @@ sub _extract_unique {
     
     EACH_UNIQUE:
     foreach my $unique( @unique_keys ) {
+        my %seen_key;
         foreach my $ref( @refs ) {
+            $seen_key{ $_ }++ for keys %$ref;
             if ( defined $ref->{ $unique } ) {
                 $unique{ $unique } = $ref->{ $unique };
                 next EACH_UNIQUE;
             }
         }
-        die "Require unique key part '$unique' either in search or data for $schema / $table\n";
+        confess "Require unique key part '$unique' either in search or data for $schema / $table, means one of '". join( ", ", @unique_keys ). "' but got only '". join( ", ", keys %seen_key ). "'\n";
     }
     my $unique = sha256_hex( join( '#', map {
         sprintf( '%s=%s', $_, $unique{ $_ } )
@@ -777,9 +816,10 @@ sub setup_handle {
 =cut
 
 sub after_register {
-    my ( $self ) = @_;
+    my ( $self, $schema_def_ref, $additive ) = @_;
     my ( %mapping, %mapping_reverse );
-    while ( my ( $schema, $schema_ref ) = each %{ $self->schema_defintions } ) {
+    $schema_def_ref ||= $self->schema_defintions;
+    while ( my ( $schema, $schema_ref ) = each %$schema_def_ref ) {
         my $schema_map_ref = $mapping{ $schema } ||= {};
         while ( my ( $table, $table_ref ) = each %$schema_ref ) {
             my $table_map_ref = $schema_map_ref->{ $table } ||= {};
@@ -790,8 +830,19 @@ sub after_register {
             }
         }
     }
-    $self->{ ldap_key_map } = \%mapping;
-    $self->{ ldap_key_map_reverse } = \%mapping_reverse;
+    
+    if ( $additive ) {
+        $self->{ ldap_key_map } ||= {};
+        $self->{ ldap_key_map }->{ $_ } = $mapping{ $_ }
+            for keys %mapping;
+        $self->{ ldap_key_map_reverse } ||= {};
+        $self->{ ldap_key_map_reverse }->{ $_ } = $mapping_reverse{ $_ }
+            for keys %mapping_reverse;
+    }
+    else {
+        $self->{ ldap_key_map } = \%mapping;
+        $self->{ ldap_key_map_reverse } = \%mapping_reverse;
+    }
     return ;
 }
 

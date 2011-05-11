@@ -448,8 +448,17 @@ sub setup_handle {
         }
         
         if ( defined $columns_ref->{ -index } ) {
-            my $idx = Tie::IxHash->new( map { ( $_ => 1 ) } @{ $columns_ref->{ -index } } );
-            $self->db->get_collection( "${schema}_${table}" )->ensure_index( $idx );
+            my @index = @{ $columns_ref->{ -index } };
+            if ( ref( $index[0] ) ) {
+                foreach my $idx_ref( @index ) {
+                    my $idx = Tie::IxHash->new( map { ( $_ => 1 ) } @$idx_ref );
+                    $self->db->get_collection( "${schema}_${table}" )->ensure_index( $idx );
+                }
+            }
+            else {
+                my $idx = Tie::IxHash->new( map { ( $_ => 1 ) } @{ $columns_ref->{ -index } } );
+                $self->db->get_collection( "${schema}_${table}" )->ensure_index( $idx );
+            }
         }
     }
     

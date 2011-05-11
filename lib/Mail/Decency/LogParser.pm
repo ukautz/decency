@@ -95,7 +95,7 @@ Example:
 
 =head1 CLASS ATTRIBUTES
 
-See L<Mail::Decency::Policy::Core>
+See L<Mail::Decency::Doorman::Core>
 
 =head2 syslog_file : Str
 

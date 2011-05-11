@@ -5,13 +5,14 @@ use Test::More;
 use FindBin qw/ $Bin /;
 use lib "$Bin/lib";
 use lib "$Bin/../lib";
+use MD_DB;
 use MD_Misc;
 use Data::Dumper;
 
 
 my $server;
 BEGIN { 
-    $server = init_server( 'Policy', {
+    $server = init_server( 'Doorman', {
         custom_scoring => {
             database => 1
         }
@@ -20,7 +21,7 @@ BEGIN {
 }
 
 
-my $module = init_module( $server, 'DummyPolicyCUSTOMSCORING', {
+my $module = init_module( $server, 'DummyDoormanCUSTOMSCORING', {
     score => -20
 } );
 

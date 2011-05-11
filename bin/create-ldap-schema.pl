@@ -8,7 +8,12 @@ use FindBin qw/ $Bin /;
 BEGIN {
     
     # check all available dirs
-    foreach my $dir( ( '/opt/decency/lib', '/opt/decency/locallib', "$Bin/../lib" ) ) {
+    foreach my $dir( (
+        '/opt/decency/lib',
+        '/opt/decency/locallib',
+        '/opt/decency/locallib/lib/perl5',
+        "$Bin/../lib"
+    ) ) {
         -d $dir && eval 'use lib "'. $dir. '"';
     }
     
@@ -49,31 +54,31 @@ my @core_schemas = ( {
 my @module_models = (
     [ qw/
         100.1
-        Policy::CBL
+        Doorman::CBL
     / ],
     [ qw/
         100.2
-        Policy::CWL
+        Doorman::CWL
     / ],
     [ qw/
         100.3
-        Policy::GeoWeight
+        Doorman::GeoWeight
     / ],
     [ qw/
         100.4
-        Policy::Greylist
+        Doorman::Greylist
     / ],
     [ qw/
         100.5
-        Policy::Honeypot
+        Doorman::Honeypot
     / ],
     [ qw/
         100.6
-        Policy::SenderPermit
+        Doorman::SenderPermit
     / ],
     [ qw/
         100.7
-        Policy::Throttle
+        Doorman::Throttle
     / ],
 );
 
@@ -150,7 +155,7 @@ foreach my $module_ref( @module_models ) {
 # ADD EXCLUSIONS AND CUSTOM SCORING
 #
 
-foreach my $server_ref( [ ContentFilter => 1 ], [ Policy => 2 ] ) {
+foreach my $server_ref( [ Detective => 1 ], [ Doorman => 2 ] ) {
     my ( $server, $num ) = @$server_ref;
     
     foreach my $core_ref( @core_schemas ) {

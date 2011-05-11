@@ -201,13 +201,13 @@ after 'init' => sub {
     if ( $self->stats_enabled->{ module_results } ) {
         $schema{ $self->name. "_results" } = \%SCHEMA_MODULE_RESULTS;
         
-        # for policy
+        # for Doorman
         # $self->register_hook( finish => sub {
         #     my ( $server, undef, $status, $final_code ) = @_;
         #     $server->update_server_stats( $status );
         # } );
         
-        # for content filter
+        # for Detective
         # $self->register_hook( post_finish => sub {
         #     my ( $server, undef, $status, $final_code ) = @_;
         #     $server->update_server_stats( $status );

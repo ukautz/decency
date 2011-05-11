@@ -8,7 +8,12 @@ use FindBin qw/ $Bin /;
 BEGIN {
     
     # check all available dirs
-    foreach my $dir( ( '/opt/decency/lib', '/opt/decency/locallib', "$Bin/../lib" ) ) {
+    foreach my $dir( (
+        '/opt/decency/lib',
+        '/opt/decency/locallib',
+        '/opt/decency/locallib/lib/perl5',
+        "$Bin/../lib"
+    ) ) {
         -d $dir && eval 'use lib "'. $dir. '"';
     }
     

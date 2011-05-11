@@ -239,7 +239,9 @@ sub test_db {
     while( my $item = $handle->$meth ) {
         $ok_set++ if $item->{ data } == 33;
     }
-    $db->set( $schema => $table => {}, { data => 99 } );
+    $db->set( $schema => $table => {
+        something => 'singleentry'
+    }, { data => 99 } );
     my $ok_single = 0;
     ( $handle, $meth ) = $db->search_read( $schema => $table );
     while( my $item = $handle->$meth ) {
@@ -258,12 +260,30 @@ sub test_db {
         } );
     }
     
+    my @res = $db->search( $schema => $table, {}, { order => [ {
+        col => 'something',
+        dir => 'asc'
+    } ], offset => 3, limit => 5 } );
+    my $ok_offset = 0;
+    my $offset_compare = 2;
+    foreach my $ref( @res ) {
+        $ok_offset ++
+            if $ref->{ something } =~ /^$offset_compare\-/;
+        $offset_compare++;
+    }
+    if ( $ok_offset == 5 ) {
+        warn "    Sort works fine\n";
+    }
+    else {
+        warn "    Sort does not work\n";
+    }
+    
     # re-read 
     my @distinct2 = $db->distinct( schema => table => {}, 'something' );
     
     # other column
     my @distinct3 = $db->distinct( schema => table => {}, 'data' );
-    ok( scalar @distinct1 == scalar @distinct2 && scalar @distinct2 == 10, "Distinct columns" );
+    ok( scalar @distinct1 == scalar @distinct2 && scalar @distinct2 == 11, "Distinct columns" );
     
     # search extended
     my $val = 1000;

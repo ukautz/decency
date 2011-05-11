@@ -161,8 +161,8 @@ sub do_lock {
     ualarm( 0 );
     if ( $@ ) {
         warn "DEADLOCK IN $name, SEM $num\n";
-        $locker->unlock( $num );
     }
+    $locker->unlock( $num );
 }
 
 

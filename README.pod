@@ -14,7 +14,7 @@ decency ..
 
 =over
 
-=item * is a highly configurable postfix policy daemon, postfix content filter and postfix log parser.
+=item * is a highly configurable postfix policy daemon, SMTP content filter.
 
 =item * aims to reduce your spam significantly.
 
@@ -51,6 +51,7 @@ At least you need perl 5.10
     IO >= 1.24
     IO::String
     IO::YAML >= 0.08
+    Mail::Field::Received
     MIME::Lite
     MIME::Parser
     MIME::QuotedPrint
@@ -101,4 +102,7 @@ Depending on which modules you plan to use
     Net::Netmask
     Sys::Syslog
         And a runnning syslog
+
+
+
 

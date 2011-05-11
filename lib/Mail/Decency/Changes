@@ -2,6 +2,7 @@ TODO:
     * config_params -> optional_params, required_params
 
 0.2.0 2011-02-30 Ulrich Kautz <uk@fortrabbit.de>
+    * Renamed ContentFilter:: to Detective:: and Policy:: to Doorman::
     * Migrated shema definition to separate model modules
     * Using SQL::Abstract::Limit instead of SQL::Abstract
     * Database abstraction can now limit and offset
@@ -10,7 +11,7 @@ TODO:
     * pageset for database (with Data::Pager)
     * Began web interface for decency (not in this package)
     * Greylist db changed (databases are now: sender address + ip + recipient address, sender address + ip + recipient domain, sender domain + ip + recipient domain)
-    * using session data instead of attributes directly in all policy modules
+    * using session data instead of attributes directly in all Doorman modules
     * Server stats extended: collect stream log and final response states/period
     * Renamed the server.pl script to decency.pl
     * Added daemon support, change of user and group, run-check method, cleanup database method and kill method for the server script
@@ -25,7 +26,7 @@ TODO:
     * IPC removal problem fixed
     * Added exclusions directory in addition to config, file and database
     * Renamed "policy"- and "filters"-attributes in server YAML files to "modules"
-    * Generalized load_modules method for ContentFilter- and Policy-Server
+    * Generalized load_modules method for Detective and Doorman
     * Added LDAP as database
     * Added custom (domain or address based) thresholds via CustomScoring module
 

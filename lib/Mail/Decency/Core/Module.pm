@@ -15,7 +15,7 @@ Mail::Decency::Core::Module
 
 =head1 DESCRIPTION
 
-Base class for all modules (M::D::Policy::*, M::D::ConntetFilter::*, M::D::LogParser::*)
+Base class for all modules (M::D::Doorman::*, M::D::Detective::*)
 
 =cut
 
@@ -294,7 +294,7 @@ sub to_prefix { return shift->session->to_prefix }
 
 =head2 (del|set|has)_flag
 
-See L<Mail::Decency::Policy::SessionItem>
+See L<Mail::Decency::Doorman::SessionItem>
 
 =cut
 

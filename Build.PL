@@ -17,11 +17,15 @@ my $build = Module::Build->new(
     license => 'perl',
     requires => {
         Archive::Tar => '1.40',
+        Carp => 0,
         Crypt::OpenSSL::RSA => 0,
         Data::Pager => 0,
         DateTime => 0,
         Digest::MD5 => 0,
         Digest::SHA => 0,
+        Email::Valid => 0,
+        File::Basename => 0,
+        File::Copy => 0,
         File::Path => '2.07',
         File::Temp => 0,
         IO => '1.24',
@@ -30,17 +34,22 @@ my $build = Module::Build->new(
         MIME::Lite => 0,
         MIME::Parser => 0,
         MIME::QuotedPrint => 0,
+        Mail::Field::Received => 0,
         Mouse => 0,
         MouseX::NativeTraits => 0,
         Net::DNS::Resolver => 0,
+        Net::Domain::TLD => 0,
         Net::LMTP => 0,
+        Net::Netmask => 0,
         Net::SMTP => 0,
         POE => 0,
         POE::Filter::Postfix => 0,
         Proc::ProcessTable => 0,
         Regexp::Common => 0,
         Regexp::IPv6 => 0,
+        Scalar::Util => 0,
         Storable => 0,
+        Sys::Syslog => 0,
         Time::HiRes => 0,
         YAML => 0,
     },
@@ -55,6 +64,19 @@ my $build = Module::Build->new(
         SQL::Abstract::Limit => 0,
         Module::Build   => '0.2805',
         Test::More      => 0,
+        
+        # optional, for modules which can be tested
+        Mail::SPF => 0,
+        Mail::DKIM => 0,
+        Net::DNSBL::Client => 0
+    },
+    optional => {
+        MongoDB => 0.35,
+        Net::LDAP => 0,
+        ClamAV::Client => 0,
+        
+        # should not be installed via perl .. rather then by distri installer
+        #Mail::SpamAssassin => 0,
     },
     sign => 1
 );

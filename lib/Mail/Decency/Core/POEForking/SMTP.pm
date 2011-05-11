@@ -17,7 +17,7 @@ use POE qw/
 /;
 
 use File::Temp qw/ tempfile /;
-use Mail::Decency::ContentFilter::Core::Constants;
+use Mail::Decency::Detective::Core::Constants;
 use Mail::Decency::Core::POEFilterSMTP;
 use Socket qw/ inet_ntoa /;
 use Data::Dumper;
@@ -28,7 +28,7 @@ Mail::Decency::Core::POEForking::SMTP
 
 =head1 DESCRIPTION
 
-SMTP Server for the content filter
+SMTP Server for the Detective
 
 =head1 METHODS
 

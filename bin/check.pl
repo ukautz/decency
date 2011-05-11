@@ -13,7 +13,7 @@ Exists with 1 if not running, 2 if no or not enough child instances are running 
 
 =head1 SYNOPSIS
 
-    check.pl --class policy --config /etc/decency/policy.yml
+    check.pl --class doorman --config /etc/decency/doorman.yml
 
 =head1 METHODS
 
@@ -27,7 +27,12 @@ use FindBin qw/ $Bin /;
 BEGIN {
     
     # check all available dirs
-    foreach my $dir( ( '/opt/decency/lib', '/opt/decency/locallib', "$Bin/../lib" ) ) {
+    foreach my $dir( (
+        '/opt/decency/lib',
+        '/opt/decency/locallib',
+        '/opt/decency/locallib/lib/perl5',
+        "$Bin/../lib"
+    ) ) {
         -d $dir && eval 'use lib "'. $dir. '"';
     }
     
@@ -57,8 +62,8 @@ GetOptions(
     "pid|p=s"    => \( $opt{ pid } = "" ),
 );
 
-die "Provide --class <policy|content-filter|log-parser>\n"
-    unless $opt{ class } && $opt{ class } =~ /^(?:policy|content\-filter|log\-parser)$/;
+die "Provide --class <doorman|detective|log-parser>\n"
+    unless $opt{ class } && $opt{ class } =~ /^(?:doorman|detective|log\-parser)$/;
 
 # if config default, replace variable with class
 $opt{ config } = sprintf( $opt{ config }, $opt{ class } )
