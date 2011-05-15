@@ -1,0 +1,489 @@
+#
+# Example Config
+#   Decency 0.2.0
+#
+
+
+#
+# DEBUGGING {
+#
+
+# debuggin options for temporary increasing debug output
+#debug_peer_list = 
+#debug_peer_level = 2
+#smtp_tls_loglevel = 3
+
+#
+# DEBUGGING }
+#
+
+
+
+
+
+
+#
+# CUSTOM VARIABLES {
+#
+
+decency_destination_recipient_limit = 1
+
+#
+# CUSTOM VARIABLES }
+#
+
+
+
+
+
+#
+# PROXY FOR CACHING {
+#   max most sense if you use LDAP or so.. for hash you don't need to (also
+#   remember to replace all usages of "proxy:hash" with "hash")
+#
+
+# put here any database (hash, ldap, unix, whatever) you use and which's
+#   "answers" you want to cache. especially for external databases such as
+#   ldap, mysql and so on this can reduce the network impact and resulting
+#   latencies a lot
+proxy_read_maps =
+    proxy:hash:/etc/postfix/hash/addresses
+    proxy:hash:/etc/postfix/hash/domains
+
+#
+# PROXY FOR CACHING }
+#
+
+
+
+
+
+
+
+#
+# POSTFIX GENERAL {
+#
+
+# cool feature: allow users to receive mails for user@domain.tld AND
+#   for user<delimiter>anything@domain.tld .. eg me+newsletter@domain.tld
+#   which allows you to filter later on very easily..
+recipient_delimiter = +
+
+# this allows postfix do reject later. why ? all restriction classe (below)
+#   - and therefore any policy server within - is capable of getting the
+#   whole amount of attributes (eg the smtpd_helo_restrictions already
+#   have the recipient an you can check them. ENABLE!!)
+smtpd_delay_reject = yes
+
+# this is who we are
+smtpd_banner = This is our Mailserver, powered by Postfix and Decency
+
+# disable unix user biff servers (obsolete)
+biff = no
+
+# the following will cause:
+#       some-domain.tld REJECT
+#   will also aply on lala.some-domain.tld and so son
+#   this might be very handy but be sure you include
+#   only what you really require
+parent_domain_matches_subdomains = 
+    debug_peer_list
+
+
+#
+# POSTFIX GENERAL }
+#
+
+
+
+#
+# YOUR NETWORK {
+#
+
+# in a multi domain environment this could be dangerous. Appends
+#   .$my_domain to all addresses with no domain suffix
+append_dot_mydomain = no
+
+# correct hostname is required for communication with other mail servers
+myhostname = mx.yourdomain.tld
+
+# set those to hostname, they are used in mail headrs
+mydomain = $myhostname
+myorigin = $mydomain
+
+# as long as working with virtual domains, this shall be set to our
+#   hostname to allow receiving mails to *@$myhostname as well
+mydestination = $myhostname
+
+# our networks could have special sender rights - use with care, localhost
+#   is safe
+mynetworks = 127.0.0.0/8
+
+# whom to trust ? "host" = me, myself and i, "subnet" = everybody in the same
+#   subnet (eg your office mailserver) or event "class", which is rarely used
+mynetworks_style = host
+
+# on which inet interfaces (eth0, eth1, .. or "all")
+inet_interfaces = all
+
+# talk which protocols.. so far ipv4 and soon ipv6 as well!
+inet_protocols = ipv4
+
+#
+# OUR NETWORK }
+#
+
+
+
+
+#
+# TLS / SSL {
+#
+
+# INCOMING -> RECEIVE
+#   try use encryption while receiving mails from other mtas
+
+smtpd_use_tls = yes
+
+# dont force, be gentle, allow
+smtpd_tls_security_level = may
+smtpd_tls_received_header = yes
+smtpd_tls_ask_ccert = yes
+
+# where the cert files are
+smtpd_tls_cert_file = /etc/postfix/mx.mydomain.tld.crt
+smtpd_tls_key_file = /etc/postfix/mx.mydomain.tld.key
+smtpd_tls_session_cache_database = btree:${queue_directory}/smtpd_scache
+
+
+# OUTGOING -> RELAY
+#   try use encryption while sending to relay
+
+smtp_use_tls = yes
+
+# be gentle, try
+smtp_tls_security_level = may
+smtp_tls_cert_file = /etc/postfix/mx.mydomain.tld.crt
+smtp_tls_key_file = /etc/postfix/mx.mydomain.tld.key
+smtp_tls_session_cache_database = btree:${queue_directory}/smtp_scache
+
+#
+# TLS / SSL }
+#
+
+
+
+
+#
+# LOCAL USERS {
+#    (root, postmaster, ..)
+#
+
+
+# for local delivery. in a shared mailserver env only of interest for
+#   thos mails to "root" an so on..
+alias_maps = hash:/etc/aliases
+
+# same as alias_maps, but only really local! maps might contain external..
+#   is used for "sendmail -bi" ..
+alias_database = hash:/etc/aliases
+
+
+#
+# LOCAL USERS }
+#
+
+
+
+
+#
+# RELAYING {
+#   addresses, domains and targets
+#
+
+# set transport to relay. this will relay to the server under "relayhost"
+relay_transport = relay
+
+# if this is an external MX, and ALL mails shall be delivered to another
+#   mailserver (eg which delivers them in a local mailbox)
+#   if you have both: relayed and local delivered mails you should
+#   set the relayhost to empty and the relay_transport to the
+#   relay target
+relayhost = [mta.mydomain.tld]:12345
+
+# be gentle with delivering (can be increased if your mailserver on the 
+#   other side can handle it!)
+relay_destination_recipient_limit = 1
+
+
+# we only accept mails for those domains
+relay_domains = proxy:hash:/etc/postfix/hash/domains
+
+# list of adresses which are to be relayed. instead of using this you
+#   could use the smtp VRFY command to check on the relay destination
+#   whther the user exists or not (see also: address_verify_relayhost)
+relay_recipient_maps = proxy:hash:/etc/postfix/hash/addresses
+
+# the transport maps can be used to overwrite the default relay target
+#   provided in relayhost. works only on a per domain bases, not per
+#   email
+#transport_maps = proxy:hash:/etc/postfix/ldap/relay-transports.cf
+
+# allow follwing client certs to send via us. there are two kind of:
+#  1) our backup servers, which do authenticate this way
+#  2) our newsletter servers .. because they might target local
+#     recipients as well
+#relay_clientcerts =
+#    hash:/etc/postfix/hash/backupserver-fingerprints
+#    hash:/etc/postfix/hash/newsletterserver-fingerprints
+
+
+#
+# RELAYING }
+#
+
+
+
+
+#
+# SIZES, LIMITS {
+#
+
+# maximum size of message postfix dares to handle. any bigger will
+#   bounced.. keep in mind: mime could have a huge overhead (base64..).
+#   some naive fallacy might be: asume you can send about 60-70% sized
+#   attachments. keep also in mind: this is the limit for receiving and
+#   deliviering. increasing it very high does not make the other mailserver
+#   receive it ..
+message_size_limit = 52428800
+mailbox_size_limit = 52428801
+
+# max amount of recipients in one mail. this includs To, Cc and Bcc
+smtpd_recipient_limit = 100
+
+# this is the limit for completing a connection. imagine you send a huge
+#   attachment (message_size_limit) over the pipe.. this can take some
+#   time. balance this corresponding to the size limit..
+smtp_connect_timeout = 60s
+
+#
+# SIZES, LIMITS }
+#
+
+
+
+
+#
+# BASIC ACCESS CONTROL {
+#
+
+# disable verify command, because we dont want no mail-address-harvesting
+#   if you setup a proxy behind a relay (on which you'll send OUT) and do
+#   not receive any mails from directly from the internet - enable it. the
+#   machine receiving mails for you can safely ask this machine wheter he
+#   should accept mails for you or not.
+disable_vrfy_command = yes
+
+# disallow sending from not existing mailboxes. you can set this later one
+#   way more accurate  via reject_authenticated_sender_login_mismatch in
+#   the restriction classes!
+#   in any case: don't enable this on a machine which is suppoed to receive
+#   mails FOR you.
+#smtpd_reject_unlisted_sender = no
+
+# even today, lot's of spammes don't bother to send a HELO or EHLO. those
+#   you can reject. any "real" mailserver would always send this. any admin
+#   who configures his server not to is not worth a penny.
+smtpd_helo_required = yes
+
+# if client makes errors -> delay him somewhat. this slows down spammer flods
+#   using misconfigured spambots (yes, a lot). if any client reaches the soft  
+#   error limit, he will be slowed down (delayed responses, by error sleep time
+#   seconds). if he reaches the hard error limit -> no go, disconnect.
+#   the more load you have, the lesser malconfigured client's you would tolerate.
+smtpd_error_sleep_time = 5s
+smtpd_soft_error_limit = 5
+smtpd_hard_error_limit = 15
+
+#
+# BASIC ACCESS CONTROL }
+#
+
+
+
+
+#
+# SASL {
+#   just deactivate everything, cause this server only receives mails
+#
+
+smtp_sasl_mechanism_filter =
+smtpd_sasl_auth_enable = no
+
+#
+# SASL }
+#
+
+
+
+
+
+#
+# RESTRICTIONS {
+#
+
+# because we've activated smtpd_delay_reject above we can assume
+#   to have "all knowledge" about the incoming mail (eg the recipient)
+#   in any restriction. keep in mind:
+#   * the first REJECT will lead to a final REJECT
+#   * if any restriction before the smtpd_recipient_restrictions says OK it
+#       will only go to the next restriction class. only in the recipient
+#       restriction the OK will really accept the mail
+
+
+
+#
+# 01 RESTRICT CLIENT (ip) {
+#
+
+smtpd_client_restrictions =
+
+#
+# 01 RESTRICT CLIENT (ip) }
+#
+
+
+
+
+#
+# 02 RESTRICT HELO (hostname) {
+#
+
+smtpd_helo_restrictions =
+
+#
+# 02 RESTRICT HELO (hostname) }
+#
+
+
+
+
+#
+# 03 RESTRICT SENDER {
+#
+
+smtpd_sender_restrictions =
+
+    check_sender_access hash:/etc/postfix/hash/customer-sender-rules
+    
+    #
+    # 03.01 PERMIT SAFE {
+    #
+    
+    
+    # 03.01.01 permit all clients with the correct certificate (our guys)
+    permit_tls_clientcerts
+    
+    #
+    # 03.01 PERMIT SAFE }
+    #
+    
+    
+    
+    
+    #
+    # 03.02 DENY MALFORMED {
+    #   this is covered mostly by the "Basic" module from Decency. However
+    #   if you prefer harsh policies (not scoring), better use the postfix
+    #   internal stuff for this.. it's faster
+    #
+    
+    # izzle-whizzle domain names suxx.. SPAM
+    #reject_non_fqdn_sender
+    #reject_non_fqdn_recipient
+    
+    # the syntax of the hostname is invalid
+    #reject_invalid_helo_hostname
+    
+    # the syntax may be valid, but not a fully qualified domain name
+    #reject_non_fqdn_helo_hostname
+    
+    # sender has neither A nor MX record
+    #reject_unknown_sender_domain
+    
+    # recipient has neither A nor MX record
+    #   this is redundant with reject_unlisted_recipient, but save to have..
+    #reject_unknown_recipient_domain
+    
+    # reject if the sender behaves strangely similar to an old spambot
+    # pipelining is: 
+    #   client sends RCPT TO before MAIL FROM..
+    #   http://www.postfix.org/postconf.5.html#check_client_access
+    reject_unauth_pipelining
+    
+    
+    #
+    # 03.02 DENY MALFORMED }
+    #
+    
+    
+    
+    #
+    # 03.03 DENY MISGUIDED {
+    #
+    
+    # due to reducing blacklist usage, reject all mails target not existing 
+    #   addresses this might pose a security list because you allow harvesting
+    #   to a certain degree!
+    # TEMP {
+    #reject_unlisted_recipient
+    # TEMP }
+    
+    # restrictive sending check mailserver
+    #    reject any mailserver tries to deliver mails to us which reverse
+    #    hostname doesnt apply to his ip..
+    #    formerly, we used reject_unknown_<client|helo>_hostname, which seems to hars
+    #reject_unknown_reverse_client_hostname
+    
+    #
+    # 03.03 DENY MISGUIDED }
+    #
+    
+    
+    #
+    # 03.04 DECENCY: POLICIES {
+    #
+    
+    check_policy_service inet:127.0.0.1:15000
+    reject_unlisted_recipient
+    
+    #
+    # 03.04 DECENCY: POLICIES }
+    #
+
+
+#
+# 03 RESTRICT SENDER }
+#
+
+
+#
+# 04 RESTRICT RECIPIENT {
+#
+
+smtpd_recipient_restrictions =
+    
+    # state one last time: we only accept, what we relay
+    reject_unauth_destination
+    
+    # this delegates all mails to the Detetive server
+    check_client_access pcre:/etc/postfix/mx-decency-detective.pcre
+    
+    # never used
+    permit
+
+#
+# 04 RESTRICT RECIPIENT }
+#
+
+

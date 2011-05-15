@@ -1,4 +1,4 @@
-package Mail::Decency::Doorman::Model::Archive;
+package Mail::Decency::Detective::Model::Archive;
 
 =head1 NAME
 

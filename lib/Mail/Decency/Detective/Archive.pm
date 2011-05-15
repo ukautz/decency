@@ -153,13 +153,14 @@ sub handle {
         if ( $self->enable_full_text_index ) {
             my %token;
             
-            my $sub_get_content = {
+            my $sub_get_content = sub {
                 my ( $mime, $n ) = @_;
                 return $mime->get( 'Content-Type' ) =~ /^text\/(?:plain|html)$/
                     ? ( $mime )
-                    : map { $n->( $_ ) } $mime->parts
+                    : ( map { $n->( $_ ) } $mime->parts )
                 ;
-            }
+            };
+            
             my @parts = $sub_get_content->( $mime, $sub_get_content );
             foreach my $part( @parts ) {
                 my $body = $part->get( 'Content-Type' ) eq 'text/plain'
@@ -181,7 +182,7 @@ sub handle {
         }
         
         # write to index database
-        $self->database->set( archive => index => \%create )
+        $self->database->set( archive => index => \%create );
     }
     
     # die here with drop exception, if don't want to keep

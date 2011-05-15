@@ -268,7 +268,7 @@ elsif ( $opt{ maintenance } || $opt{ print_stats } || $opt{ print_sql } || $opt{
     
     # print out statistics
     elsif ( $opt{ print_sql } ) {
-        $server->setup();
+        $server->setup( undef, { execute => 0 } );
         $server->print_sql;
     }
     

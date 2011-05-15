@@ -442,11 +442,15 @@ sub setup_handle {
         'create table', "${schema}_${table}" => \@columns );
     
     push @stm, scalar $self->sql->generate(
-        'create index', $_->[0] => $_->[1] )
+        'create index', $_->[0] => [ map {
+            $self->quote_char. $_ . $self->quote_char
+        } @{ $_->[1] } ] )
         for @indices;
     
     push @stm, scalar $self->sql->generate(
-        'create unique index', $_->[0] => $_->[1] )
+        'create unique index', $_->[0] => [ map {
+            $self->quote_char. $_ . $self->quote_char
+        } @{ $_->[1] } ] )
         for @uniques;
     
     unless ( $execute ) {

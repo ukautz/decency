@@ -56,7 +56,7 @@ database:
     # type: MongoDB
     type: DBD
     args:
-        - 'dbi:SQLite:dbname=/tmp/decency.db'
+        - 'dbi:SQLite:dbname=/var/spool/decency/database.db'
     # type: LDAP
     # host: 127.0.0.1:389
     # user: cn=admin,dc=nodomain

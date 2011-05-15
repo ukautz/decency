@@ -33,7 +33,7 @@ sub print_sql {
         while( my ( $schema, $tables_ref ) = each %$definition_ref ) {
             while ( my ( $table, $columns_ref ) = each %$tables_ref ) {
                 $child->database->setup( $schema => $table => $columns_ref,
-                    { execute => 1, test => 1 } );
+                    { execute => 0, test => 0 } );
                 print "\n";
             }
         }

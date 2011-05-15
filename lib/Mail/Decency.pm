@@ -60,7 +60,7 @@ L<http://www.decency-antispam.org/about>
 
 =item * L<Mail::Decency::LogParser>
 
-=item * http://blog.foaa.de/decency
+=item * http://www.decency-antispam.org
 
 =back
 

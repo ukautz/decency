@@ -138,10 +138,10 @@ sub handle {
     my ( $self ) = @_;
     
     # already checked this IP somewhere before ?
-    return if $this->has_flag( 'dnsbl_ip_'. $self->ip );
+    return if $self->has_flag( 'dnsbl_ip_'. $self->ip );
     
     # set flag of the to be checked IP
-    $this->set_flag( 'dnsbl_ip_'. $self->ip );
+    $self->set_flag( 'dnsbl_ip_'. $self->ip );
     
     my ( $reject_ref, $add_score, $from_harsh )
         = $self->check_dnsbls( $self->ip, $self->harsh );

@@ -127,10 +127,10 @@ sub handle {
     foreach my $ip( @{ $self->session->ips } ) {
         
         # already checked this IP somewhere before ?
-        next if $this->has_flag( 'dnsbl_ip_'. $self->ip );
+        next if $self->has_flag( 'dnsbl_ip_'. $ip );
         
         # set flag of the to be checked IP
-        $this->set_flag( 'dnsbl_ip_'. $self->ip );
+        $self->set_flag( 'dnsbl_ip_'. $ip );
         
         # run check
         my ( $reject_ref, $score_add ) = $self->check_dnsbls( $ip );

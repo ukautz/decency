@@ -88,6 +88,8 @@ sub init {
     $self->logger->debug0( "Train spam mails: ". ( $self->train ? "enabled" : "disabled" ) );
     $self->logger->debug0( "Collect spam mails: ". ( $self->do_collect ? "enabled" : "disabled" ) );
     
+    $self->{ schema_definition } = undef;
+    
     $self->name( "HoneyCollector" );
     
 }

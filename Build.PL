@@ -74,6 +74,9 @@ my $build = Module::Build->new(
         MongoDB => 0.35,
         Net::LDAP => 0,
         ClamAV::Client => 0,
+        Cache::FastMmap => 0,
+        Cache::Memcache => 0,
+        Cache::Memcache::XS => 0,
         
         # should not be installed via perl .. rather then by distri installer
         #Mail::SpamAssassin => 0,

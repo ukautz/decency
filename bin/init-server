@@ -24,11 +24,14 @@ if [ "X$DECENCY_PERL" == "X" ]; then
     DECENCY_PERL=$( which perl )
 fi
 if [ "X$DECENCY_USER" == "X" ]; then
-    DECENCY_USER="mailuser"
+    DECENCY_USER="decency"
+fi
+if [ "X$DECENCY_GROUP" == "X" ]; then
+    DECENCY_GROUP="decency"
 fi
 
 DECENCY_SERVER=$1
-DECENCY_CMD="/opt/decency/bin/server.pl"
+DECENCY_CMD="/opt/decency/bin/decency.pl"
 DECENCY_PID="/var/run/decency/$DECENCY_SERVER.pid"
 
 
@@ -73,7 +76,7 @@ case $2 in
         
         # start now
         log_daemon_msg "Start $DECENCY_SERVER server"
-        start-stop-daemon --background  --name "$DECENCY_SERVER-$$" --start --exec $DECENCY_PERL -- $DECENCY_PERL_BASE $DECENCY_CMD $DECENCY_ARGS --pid-file $DECENCY_PID --class $DECENCY_SERVER --user $DECENCY_USER
+        $DECENCY_CMD -a $DECENCY_SERVER -u $DECENCY_USER -g $DECENCY_GROUP -p $DECENCY_PID -a $DECENCY_SERVER -d
         
         # check wheter started
         sleep 1
@@ -83,7 +86,6 @@ case $2 in
             exit 0
         else
             log_failure_msg "$DECENCY_SERVER server could not be started"
-            echo "start-stop-daemon --background  --name "$DECENCY_SERVER-$$" --start --exec $DECENCY_PERL -- $DECENCY_PERL_BASE $DECENCY_CMD $DECENCY_ARGS --pid-file $DECENCY_PID --class $DECENCY_SERVER --user $DECENCY_USER"
             exit 1
         fi
     ;;
@@ -97,16 +99,14 @@ case $2 in
         fi
         
         # perform stop
-        start-stop-daemon --pid $DECENCY_PID --stop
+        $DECENCY_CMD -a $DECENCY_SERVER -u $DECENCY_USER -g $DECENCY_GROUP -p $DECENCY_PID -a $DECENCY_SERVER -k
         
         # check wheter started
         sleep 1
         is_running
         if [ $? -eq 0 ]; then
             log_success_msg "$DECENCY_SERVER server has been stopped"
-            if [ -f $DECENCY_PID ]; then
-                rm $DECENCY_PID
-            fi
+            [ -f $DECENCY_PID ] && rm $DECENCY_PID
             exit 0
         else
             log_failure_msg "$DECENCY_SERVER server could not be stopped"

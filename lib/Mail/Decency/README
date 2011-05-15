@@ -88,7 +88,7 @@ Depending on which modules / database / cache you plan to use
   Runs maintenance (cleanup database) in dry run mode if set and bool true
 
 * DECENCY_CONSOLE_LOG
-  Log to console. Automatic set to 1 if ran not in deamon mode.
+  Log to console. Automatic set to 1 if not run in deamon mode.
 
 * DECENCY_CONSOLE_LOG_FULL
   Add timestamp, pid and level to console debug. Automatic set to 1 if server started
@@ -117,4 +117,4 @@ Ulrich Kautz <uk@fortrabbit.de>
 
 06. LINKS
 
-http://blog.foaa.de/decency
+http://www.decency-antispam.org
