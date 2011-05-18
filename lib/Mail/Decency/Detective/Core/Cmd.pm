@@ -167,7 +167,11 @@ sub cmd_filter {
     
     # open command line and print to it
     else {
-        open $input_handle, '|-', "$cmd 1>\"$tn\" 2>\"$tn\"";
+        {
+            # yeah, zombie mess..
+            local $SIG{ CHLD } = 'ignore';
+            open $input_handle, '|-', "$cmd 1>\"$tn\" 2>\"$tn\"";
+        };
         $self->add_file_handle( $input_handle );
     }
     
@@ -188,8 +192,12 @@ sub cmd_filter {
     if ( $file_mode ) {
         ( my $cmd_file = $cmd ) =~ s/%file%/$input_file/;
         $self->logger->debug3( "Run command '$cmd_file'" );
-        `$cmd_file 1>"$tn" 2>"$tn"`;
-        $system_result = $?;
+        {
+            # zombies are creepy
+            local $SIG{ CHLD } = 'ignore';
+            `$cmd_file 1>"$tn" 2>"$tn"`;
+            $system_result = $?;
+        };
     }
     
     # read now output from tempfile and remove it.. break after first empty line

@@ -1,8 +1,13 @@
 ---
-archive_dir: /var/spool/decency/archive/%recipient_domain%/%ymd%/%recipient_prefix%-%hm%
-archive_spam: 1
+
 disable: 0
-drop: 0
 max_size: 0
 timeout: 30
+
+archive_dir: /var/spool/decency/archive/%recipient_domain%/%ymd%/%recipient_prefix%-%hm%
+archive_spam: 1
+drop: 0
+
+use_index_db: 1
+enable_full_text_index: 1
 

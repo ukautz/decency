@@ -1,0 +1,23 @@
+---
+
+harsh: 0
+blacklist:
+  - host: ix.dnsbl.manitu.net
+    weight: -100
+  - host: b.barracudacentral.org
+    weight: -80
+  - host: bl.spamcop.net
+    weight: -80
+  - host: dnsbl.njabl.org
+    weight: -50
+  - host: psbl.surriel.com
+    weight: -50
+  - host: dnsbl-1.uceprotect.net
+    weight: -40
+  - host: dnsbl.sorbs.net
+    weight: -40
+  - host: dyna.spamrats.com
+    weight: -30
+
+
+

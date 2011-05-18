@@ -79,7 +79,6 @@ Usage: $0 --class <classname> --config <configfile> --pidfile <pidfile>
         What kind of server to start ?
             doorman = Mail::Decency::Doorman
             detective = Mail::Decency::Detective
-            log-parser = Mail::Decency::LogParser
     
     --config | -c <file>
         Path to config .. 

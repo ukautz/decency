@@ -12,7 +12,7 @@ use MD_Misc;
 my $server;
 BEGIN { 
     $server = init_server( 'Doorman' );
-    use Test::More tests => 12;
+    use Test::More tests => 13;
 }
 
 ok( $server, "Doorman loaded" );
@@ -94,5 +94,19 @@ CHECK_FLAGS: {
     my $res = decode_qp( $server->session_cleanup );
     my @res = split( /\|/, $res );
     ok( $res[4] eq 'test,xxx', "Flag appended" );
+}
+
+DOORMAN_DORMAN_CACHE: {
+    my $attrs_ref = {
+        instance => '123123123'
+    };
+    session_init( $server, $attrs_ref );
+    $server->session->set_flag( 'server1_was_here' );
+    $server->session_cleanup;
+    
+    my $server2 = init_server( 'Doorman' );
+    session_init( $server2, $attrs_ref );
+    ok( defined $server2->session->has_flag( 'server1_was_here' ), "Session via cache" );
+    undef $server2;
 }
 

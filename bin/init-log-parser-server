@@ -1,3 +1,0 @@
-#!/bin/bash
-
-/opt/decency/bin/init-server log-parser $@

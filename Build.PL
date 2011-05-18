@@ -54,10 +54,11 @@ my $build = Module::Build->new(
         YAML => 0,
     },
     recommends => {
-        NetAddr::IP     => '4.007'  # has all $& and $` removed for better performance
+        NetAddr::IP => '4.007'
     },
     build_requires => {
         Cache::File => 0,
+        DBD => 0,
         DBD::SQLite => 0,
         DBI => 0,
         DBIx::Connector => 0,
@@ -71,20 +72,31 @@ my $build = Module::Build->new(
         Net::DNSBL::Client => 0
     },
     optional => {
+        
+        # using MongoDB as database
         MongoDB => 0.35,
+        
+        # using LDAP as database
         Net::LDAP => 0,
+        
+        # using ClamAV
         ClamAV::Client => 0,
+        
+        # using a cache
         Cache::FastMmap => 0,
         Cache::Memcache => 0,
         Cache::Memcache::XS => 0,
         
-        # should not be installed via perl .. rather then by distri installer
+        # should not be installed via perl .. rather by distri installer
         #Mail::SpamAssassin => 0,
+        
+        # should be installed via distri
+        #Geo::IP => 0
     },
     sign => 1
 );
 
 $build->add_build_element($_)
-    foreach qw(sbin);
+    foreach qw(bin);
 
 $build->create_build_script();

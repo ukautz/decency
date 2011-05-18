@@ -6,7 +6,6 @@
 
 0 0 * * * root [ ! -f /tmp/decency-doorman.disabled ] && sleep $((RANDOM\%3600)) && /usr/bin/perl /opt/decency/bin/decency.pl -a doorman -u mailuser -g mailusers --maintenance -l 1 2>&1 | /usr/bin/logger -t decency-maintenance
 0 1 * * * root [ ! -f /tmp/decency-detective.disabled ] && sleep $((RANDOM\%3600)) && /usr/bin/perl /opt/decency/bin/decency.pl -a detective -u mailuser -g mailusers --maintenance -l 1 2>&1 | /usr/bin/logger -t decency-maintenance
-0 2 * * * root [ ! -f /tmp/decency-log-parser.disabled ] && sleep $((RANDOM\%3600)) && /usr/bin/perl /opt/decency/bin/decency.pl -a log-parser -u mailuser -g mailusers --maintenance -l 1 2>&1 | /usr/bin/logger -t decency-maintenance
 
 */10 * * * * root [ ! -f /tmp/decency-doorman.disabled ] && /usr/bin/perl /opt/decency/bin/check.pl -a doorman; echo $? > /tmp/doorman.state
 *   * * * * root [ ! -f /tmp/decency-doorman.disabled ] && [[ $( cat /tmp/doorman.state ) -gt 0 ]] && /usr/bin/perl /opt/decency/bin/decency.pl -a doorman -u mailuser -g mailusers -d -l  6

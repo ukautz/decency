@@ -115,9 +115,9 @@ case $2 in
     ;;
     
     restart)
-         $0 stop
+         $0 $1 stop
          sleep 1
-         $0 start
+         $0 $1 start
     ;;
     
     status)

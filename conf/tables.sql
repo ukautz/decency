@@ -2,11 +2,11 @@
 
 -- For: Archive
 -- TABLE: archive_index (SQLITE):
-CREATE TABLE ARCHIVE_INDEX ("created" int, "search" text, "to" varchar(255), "filename" text, "from" varchar(255), "subject" varchar(255), id INTEGER PRIMARY KEY);
+CREATE TABLE ARCHIVE_INDEX ("search" text, "from_domain" varchar(255), "subject" varchar(255), "from_prefix" varchar(255), "created" int, "to_domain" varchar(255), "to_prefix" varchar(255), "filename" text, "md5" varchar(32), id INTEGER PRIMARY KEY);
 CREATE INDEX ARCHIVE_INDEX_CREATED ON ARCHIVE_INDEX ("created");
 CREATE INDEX ARCHIVE_INDEX_SUBJECT ON ARCHIVE_INDEX ("subject");
-CREATE INDEX ARCHIVE_INDEX_FROM ON ARCHIVE_INDEX ("from");
-CREATE INDEX ARCHIVE_INDEX_TO ON ARCHIVE_INDEX ("to");
+CREATE INDEX ARCHIVE_INDEX_FROM_DOMAIN_FROM_PREFIX ON ARCHIVE_INDEX ("from_domain", "from_prefix");
+CREATE INDEX ARCHIVE_INDEX_TO_DOMAIN_TO_PREFIX ON ARCHIVE_INDEX ("to_domain", "to_prefix");
 
 
 -- For: Mail::Decency::Detective=HASH(0x2ac1d28)

@@ -26,22 +26,21 @@ Implement DKIM verification of incoming mails. Counter part would be DKIM signin
 =head1 CONFIG
 
     ---
-    DKIM:
-        
-        # signature present and fitting
-        #weight_pass: 50
-        
-        # signature present, but incorrect
-        #weight_fail: -100
-        
-        # signature malformed .. cannot be processed
-        #weight_invalid: -50
-        
-        # some temporary error occured. Probably nothing bad
-        #weight_temperror: -10
-        
-        # no key whats-o-ever found in mail, cannot verify
-        #weight_none: 0
+    
+    # signature present and fitting
+    #weight_pass: 50
+    
+    # signature present, but incorrect
+    #weight_fail: -100
+    
+    # signature malformed .. cannot be processed
+    #weight_invalid: -50
+    
+    # some temporary error occured. Probably nothing bad
+    #weight_temperror: -10
+    
+    # no key whats-o-ever found in mail, cannot verify
+    #weight_none: 0
 
 =head1 CLASS ATTRIBUTES
 

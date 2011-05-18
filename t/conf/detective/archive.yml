@@ -1,0 +1,7 @@
+---
+
+disable: 0
+timeout: 30
+
+use_index_db: 1
+enable_full_text_index: 1

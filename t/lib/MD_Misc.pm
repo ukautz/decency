@@ -110,6 +110,10 @@ sub init_server {
     $config_ref->{ cache } = {
         class => "Memory",
     };
+    
+    # listen to socket
+    $config_ref->{ server } = { socket => "$Bin/data/". lc( $server_class ). ".sock" };
+    
     $config_ref->{ config_dir } = "$Bin/conf";
     $config_ref->{ $_ } = $INFO{ $server_class }->{ create }->{ $_ }
         for keys %{ $INFO{ $server_class }->{ create } ||= {} };
@@ -297,8 +301,16 @@ sub cleanup_server {
 sub cleanup_database {
     my ( $obj ) = @_;
     my $db = eval { $obj->database->db };
-    return unless $db;
+    
     unless( $ENV{ NO_DB_CLEANUP } ) {
+        
+        # try cleanup SQLite
+        my $sqlite = MD_DB::sqlite_file();
+        unlink( $sqlite ) if -f $sqlite;
+        
+        # other dbs require handle for cleanup
+        return unless $db;
+        
         if ( $ENV{ USE_MONGODB } ) {
             $db->drop;
         }
@@ -320,10 +332,6 @@ sub cleanup_database {
                     $db->delete( $item->dn );
                 }
             };
-        }
-        else {
-            my $sqlite = MD_DB::sqlite_file();
-            unlink( $sqlite ) if -f $sqlite;
         }
     }
 }

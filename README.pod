@@ -40,68 +40,82 @@ At least you need perl 5.10
 
 =head3 RUN
 
-    Archive::Tar >= 1.40
+    Archive::Tar > 1.40
+    Carp
     Crypt::OpenSSL::RSA
     Data::Pager
     DateTime
     Digest::MD5
     Digest::SHA
-    File::Path >= 2.07
+    Email::Valid
+    File::Basename
+    File::Copy
+    File::Path > 2.07
     File::Temp
-    IO >= 1.24
+    IO > 1.24
     IO::String
-    IO::YAML >= 0.08
-    Mail::Field::Received
+    IO::YAML > 0.08
     MIME::Lite
     MIME::Parser
     MIME::QuotedPrint
-    Mouse >= 1.00
+    Mail::Field::Received
+    Mouse
     MouseX::NativeTraits
     Net::DNS::Resolver
+    Net::Domain::TLD
     Net::LMTP
+    Net::Netmask
     Net::SMTP
     POE
     POE::Filter::Postfix
     Proc::ProcessTable
     Regexp::Common
     Regexp::IPv6
+    Scalar::Util
     Storable
+    Sys::Syslog
     Time::HiRes
     YAML
 
 =head3 TESTING
 
     Cache::File
+    DBD
     DBD::SQLite
     DBI
     DBIx::Connector
     SQL::Abstract::Limit
+    Module::Build > 0.2805
+    Test::More
+    
+    # optional, for modules which can be tested
+    Mail::SPF
+    Mail::DKIM
+    Net::DNSBL::Client
 
 =head3 OPTIONAL
 
 Depending on which modules you plan to use
 
-    Cache::FastMmap
-    Cache::Memcached or Class::Memcached::XS
-        Also a running memcached server
-    ClamAV::Client
-        Also a running clamav-server
-    Email::Valid
-    Geo::IP
-        CAUTION: You better install this via your distri installer, can be quite time intensive and a lot of hassle
-    Mail::DKIM
-    Mail::SPF
-    Mail::SpamAssassin::Client
-        Also a running SpamAssassin somewhere
-    MongoDB
-        Also a running mongodb server
-    Net::DNSBL::Client
-    Net::Domain::TLD
+    # using MongoDB as database
+    MongoDB => 0.35,
+    
+    # using LDAP as database
     Net::LDAP
-        Also a running LDAP server
-    Net::Netmask
-    Sys::Syslog
-        And a runnning syslog
+    
+    # using ClamAV
+    ClamAV::Client
+    
+    # using a cache
+    Cache::FastMmap
+    Cache::Memcache
+    Cache::Memcache::XS
+    
+    # should not be installed via perl .. rather by distri installer
+    #Mail::SpamAssassin
+    
+    # should be installed via distri
+    #Geo::IP
 
 
 

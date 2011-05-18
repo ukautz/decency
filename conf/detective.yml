@@ -101,17 +101,18 @@ virus:
 
 
 modules:
+    - DeepDNSBL: "detective/deep-dnsbl.yml"
     - DKIMVerify: "detective/dkim-verify.yml"
-    #- MimeAttribs: "detective/mime-attribs.yml"
+    # - MimeAttribs: "detective/mime-attribs.yml"
     # - ClamAV: detective/clamav.yml
-    - Bogofilter: detective/bogofilter.yml
-    - DSPAM: detective/dspam.yml
-    - CRM114: detective/crm114.yml
-    - Razor: detective/razor.yml
-    - HoneyCollector: detective/honey-collector.yml
-    #- SpamAssassin: detective/spamassassin.yml
+    # - Bogofilter: detective/bogofilter.yml
+    # - DSPAM: detective/dspam.yml
+    # - CRM114: detective/crm114.yml
+    # - Razor: detective/razor.yml
+    # - HoneyCollector: detective/honey-collector.yml
+    # - SpamAssassin: detective/spamassassin.yml
     - Archive: detective/archive.yml
-    #- LiveStats: detective/live-stats.yml
+    # - LiveStats: detective/live-stats.yml
 
 
 

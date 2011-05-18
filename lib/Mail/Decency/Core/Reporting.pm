@@ -198,7 +198,7 @@ sub write_report {
     # stop if not required
     return if $self->reporting_accepted_disabled
         && $status =~ /^(?:ongoing|prepend|ok)$/;
-    my $server_prefix = substr( $self->name, 0, 1 );
+    my $server_prefix = lc( $self->name ) =~ /detective/ ? 'c' : 'p';
     
     # build row
     my @row;

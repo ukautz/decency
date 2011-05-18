@@ -1,0 +1,59 @@
+Return-Path: <bla@sender.tld>
+Delivered-To: me@recipient.tld
+Received: from smtp.sender.tld (unknown [123.123.123.123])
+	by mx.recipient.tld (Postfix) with ESMTPA id 0251C1A2B3
+	for <me@recipient.tld>; Wed, 18 May 2011 11:18:13 +0200 (CEST)
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="=_5276a6cf1735f0db396998a70eb29e13"
+Date: Wed, 18 May 2011 11:18:13 +0200
+From: <bla@sender.tld>
+To: <me@recipient.tld>
+Subject: HTML Mail
+Message-ID: <bae0e0cb076de65bca1606e78bcb8948@mx.recipient.tld>
+User-Agent: Whatever
+
+        
+--=_5276a6cf1735f0db396998a70eb29e13
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html;
+ charset=UTF-8
+
+<p><span style=3D"text-decoration: underline;">This</span> is an <em>HTML</=
+em> Mail</p>
+<p>&nbsp;</p>
+<p style=3D"text-align: right;"><span style=3D"font-size: medium; font-fami=
+ly: andale mono,times;"><strong>How are things ?</strong></span></p>
+
+<p>&nbsp;</p>
+<blockquote type=3D"cite" style=3D"padding-left:5px; border-left:#1010ff 2p=
+x solid; margin-left:5px; width:100%">
+<blockquote type=3D"cite" style=3D"padding-left:5px; border-left:#1010ff 2p=
+x solid; margin-left:5px; width:100%">
+<blockquote type=3D"cite" style=3D"padding-left:5px; border-left:#1010ff 2p=
+x solid; margin-left:5px; width:100%">
+<blockquote type=3D"cite" style=3D"padding-left:5px; border-left:#1010ff 2p=
+x solid; margin-left:5px; width:100%">
+<blockquote type=3D"cite" style=3D"padding-left:5px; border-left:#1010ff 2p=
+x solid; margin-left:5px; width:100%">
+<blockquote type=3D"cite" style=3D"padding-left:5px; border-left:#1010ff 2p=
+x solid; margin-left:5px; width:100%">
+<blockquote type=3D"cite" style=3D"padding-left:5px; border-left:#1010ff 2p=
+x solid; margin-left:5px; width:100%">
+<blockquote type=3D"cite" style=3D"padding-left:5px; border-left:#1010ff 2p=
+x solid; margin-left:5px; width:100%">
+<ul>
+<li style=3D"text-align: justify;">Bla, yadda</li>
+</ul>
+</blockquote>
+</blockquote>
+
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+--=_5276a6cf1735f0db396998a70eb29e13--
+
+

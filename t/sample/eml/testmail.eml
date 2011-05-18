@@ -1,6 +1,9 @@
 From: Sender Name <sender@domain.tld>
 Content-Type: text/plain;
 	charset=windows-1252
+Received: from localhost (localhost [127.0.0.1])
+	by mymailserver.tld (Postfix) with SMTP id 645A21A258
+	for <recipient@other-domain.tld>; Mon, 16 May 2011 10:46:48 +0200 (CEST)
 Content-Transfer-Encoding: quoted-printable
 Subject: This is the Subject
 X-Universally-Unique-Identifier: 12345678-1234-1234-1234-123456789012

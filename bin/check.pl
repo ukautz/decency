@@ -62,8 +62,8 @@ GetOptions(
     "pid|p=s"    => \( $opt{ pid } = "" ),
 );
 
-die "Provide --class <doorman|detective|log-parser>\n"
-    unless $opt{ class } && $opt{ class } =~ /^(?:doorman|detective|log\-parser)$/;
+die "Provide --class <doorman|detective>\n"
+    unless $opt{ class } && $opt{ class } =~ /^(?:doorman|detective)$/;
 
 # if config default, replace variable with class
 $opt{ config } = sprintf( $opt{ config }, $opt{ class } )

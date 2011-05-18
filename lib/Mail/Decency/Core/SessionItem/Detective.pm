@@ -368,7 +368,7 @@ sub retreive_doorman_scoring {
             
             # verify instance
             my $ok = $self->verify_key->verify(
-                join( "|", $signature, $weight, $timestamp, $flags, @info ),
+                join( "|", $instance, $weight, $timestamp, $flags, @info ),
                 pack( "H*", $signature )
             );
             
@@ -510,11 +510,10 @@ sub _init_file {
         my $to = "". ( $mime_head->get( 'Delivered-To' ) ||  $mime_head->get( 'To' )  || "" );
         if ( $to ) {
             if ( $to =~ /<([^>]+)>/ ) {
-                $self->to( $1 );
+                $to = $1;
             }
-            else {
-                $self->to( $to );
-            }
+            1 while chomp( $to );
+            $self->to( $to );
         }
     }
     
@@ -523,11 +522,10 @@ sub _init_file {
         my $from = "". ( $mime_head->get( 'Return-Path' ) ||  $mime_head->get( 'From' ) || "" );
         if ( $from ) {
             if ( $from =~ /<([^>]+)>/ ) {
-                $self->from( $1 );
+                $from = $1;
             }
-            else {
-                $self->from( $from );
-            }
+            1 while chomp( $from );
+            $self->from( $from );
         }
     }
     

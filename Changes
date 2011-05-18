@@ -29,6 +29,7 @@ TODO:
     * Generalized load_modules method for Detective and Doorman
     * Added LDAP as database
     * Added custom (domain or address based) thresholds via CustomScoring module
+    * Dropped LogParser. Maybe revive it in the future
 
 
 0.1.7 2010-07-19 Ulrich Kautz <uk@fortrabbit.de>

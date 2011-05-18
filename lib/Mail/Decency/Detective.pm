@@ -1342,12 +1342,17 @@ sub session_init {
     
     # setup new info
     ( my $init_id = $file ) =~ s/[\/\\]/-/g;
+    my %verify = $self->has_doorman_verify_key
+        ? ( verify_key => $self->doorman_verify_key_rsa )
+        : ()
+    ;
     $self->session( Mail::Decency::Core::SessionItem::Detective->new(
         id                  => $init_id || "unknown-". time(),
         file                => $file,
         mime_output_dir     => $self->mime_output_dir,
         cache               => $self->cache,
-        recipient_delimiter => $self->recipient_delimiter
+        recipient_delimiter => $self->recipient_delimiter,
+        %verify
     ) );
     my $session = $self->session;
     
@@ -1357,15 +1362,13 @@ sub session_init {
     
     # get last queue ID
     my @received = $session->mime->head->get( 'Received' );
-    $self->logger->debug0( "received ". Dumper( \@received ) );
     my $received = shift @received;
     if ( $received && $received =~ /E?SMTP id ([A-Z0-9]+)/ms ) {
         my $id = $1;
         $session->id( $id );
         
         # try read info from Doorman from cache
-        my $cached = $self->cache->get( "QUEUE-$id" );
-        $self->logger->debug2( "Got cached $id ". Dumper( $cached ) );
+        my $cached = $self->cache->get( "QUEUE-$id" ) || $self->cache->get( "DOORMAN-$id" );
         $session->update_from_cache( $cached )
             if $cached && ref( $cached );
     }

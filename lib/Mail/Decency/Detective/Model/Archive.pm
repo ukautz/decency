@@ -45,13 +45,21 @@ has schema_definition => ( is => 'ro', isa => 'HashRef[HashRef]', default => sub
     {
         archive => {
             index => {
-                subject  => [ varchar => 255 ],
-                from     => [ varchar => 255 ],
-                to       => [ varchar => 255 ],
-                created  => 'int',
-                search   => 'text',
-                filename => 'text',
-                -index   => [ [ 'created' ], [ 'subject' ], [ 'from' ], [ 'to' ] ]
+                subject     => [ varchar => 255 ],
+                from_domain => [ varchar => 255 ],
+                from_prefix => [ varchar => 255 ],
+                to_domain   => [ varchar => 255 ],
+                to_prefix   => [ varchar => 255 ],
+                created     => 'int',
+                search      => 'text',
+                filename    => 'text',
+                md5         => [ varchar => 32 ],
+                -index      => [
+                    [ 'created' ],
+                    [ 'subject' ],
+                    [ 'from_domain', 'from_prefix' ],
+                    [ 'to_domain', 'to_prefix' ]
+                ]
             },
         }
     };

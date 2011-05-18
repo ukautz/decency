@@ -5,7 +5,6 @@ extends qw/
     Mail::Decency::Detective::Core
     Mail::Decency::Detective::Model::Archive
 /;
-
 use version 0.74; our $VERSION = qv( "v0.2.0" );
 
 use Data::Dumper;
@@ -13,6 +12,8 @@ use File::Path qw/ mkpath /;
 use File::Basename qw/ fileparse /;
 use File::Copy qw/ copy /;
 use Mail::Decency::Core::Exception;
+use Digest::MD5;
+use IO::File;
 
 =head1 NAME
 
@@ -52,6 +53,23 @@ Archive module. Write a copy of the passing mail to archive directory on disk.
     
     # wheter also use the full text index
     enable_full_text_index: 1
+    
+
+=head1 SQL
+
+For the search index
+
+    -- TABLE: archive_index (SQLITE):
+    CREATE TABLE ARCHIVE_INDEX ("search" text, "from_domain" varchar(255),
+        "subject" varchar(255), "from_prefix" varchar(255), "created" int,
+        "to_domain" varchar(255), "to_prefix" varchar(255), "filename" text,
+        "md5" varchar(32), id INTEGER PRIMARY KEY);
+    CREATE INDEX ARCHIVE_INDEX_CREATED ON ARCHIVE_INDEX ("created");
+    CREATE INDEX ARCHIVE_INDEX_SUBJECT ON ARCHIVE_INDEX ("subject");
+    CREATE INDEX ARCHIVE_INDEX_FROM_DOMAIN_FROM_PREFIX ON ARCHIVE_INDEX
+        ("from_domain", "from_prefix");
+    CREATE INDEX ARCHIVE_INDEX_TO_DOMAIN_TO_PREFIX ON ARCHIVE_INDEX
+        ("to_domain", "to_prefix");
 
 =head1 CLASS ATTRIBUTES
 
@@ -141,13 +159,23 @@ sub handle {
         my $session = $self->session;
         my $mime = $session->mime;
         my $head = $mime->head;
+        chomp( my $subject = substr( $head->get( 'Subject' ), 0, 255 ) );
         my %create = (
-            created  => time(),
-            subject  => substr( $head->get( 'Subject' ), 0, 255 ),
-            to       => $session->to,
-            from     => $session->from,
-            filename => $file
+            created     => time(),
+            subject     => $subject,
+            to_domain   => $session->to_domain,
+            to_prefix   => $session->to_prefix,
+            from_domain => $session->from_domain,
+            from_prefix => $session->from_prefix,
+            filename    => $file
         );
+        
+        # get md5
+        my $md5 = Digest::MD5->new;
+        my $fh = $self->open_file( '<', $file );
+        $md5->addfile( $fh );
+        $create{ md5 } = $md5->hexdigest;
+        close $fh;
         
         # also use full text index ?
         if ( $self->enable_full_text_index ) {
@@ -155,7 +183,7 @@ sub handle {
             
             my $sub_get_content = sub {
                 my ( $mime, $n ) = @_;
-                return $mime->get( 'Content-Type' ) =~ /^text\/(?:plain|html)$/
+                return $mime->get( 'Content-Type' ) =~ /^text\/(?:plain|html)(?:$|;)/
                     ? ( $mime )
                     : ( map { $n->( $_ ) } $mime->parts )
                 ;
@@ -163,11 +191,12 @@ sub handle {
             
             my @parts = $sub_get_content->( $mime, $sub_get_content );
             foreach my $part( @parts ) {
-                my $body = $part->get( 'Content-Type' ) eq 'text/plain'
+                my $body = $part->get( 'Content-Type' ) =~ /^text\/plain/
                     ? $part->stringify_body
                     : do {
                         my $b = $part->stringify_body;
                         $b =~ s/<.+?>//gms;
+                        $b =~ s/&\w+;//gms;
                         $b;
                     }
                 ;
@@ -175,8 +204,9 @@ sub handle {
                     length($_) > 2
                 } map {
                     s/[^\p{L}_-]//gms;
+                    s/([-_*])(\w+)\1/$2/gms;
                     $_;
-                } split( ' ', lc( $b ) );
+                } split( ' ', lc( $body ) );
             }
             $create{ search } = join( ' ', sort keys %token );
         }

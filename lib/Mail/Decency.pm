@@ -11,44 +11,19 @@ use version 0.74; our $VERSION = qv( "v0.2.0" );
 
 Mail::Decency - Anti-Spam fighting framework
 
-
 =head1 DESCRIPTION
 
-Mail::Decency is an interface between postfix (MTA), a bunch of policies (eg DNSBL, SPF, ..), multiple content filters (eg DSPAM, Bogofilter, ClamAV, DKIM validation, ...) and a log parser.
+Decency is an all-in-one anti SPAM solution.
 
-It is based on POE and Mouse and runs as a daemon with multiple forked instances.
+The general idea is to evaluate the probability of a mail being SPAM or HAM by applying multiple results from multiple vectors - each providing a scoring which will be cumulated until a defined threshold has been reached.
 
-=head1 SYNOPSIS
+Decency is designed to be an extendable middle-ware between multiple existing third party filters (virus, SPAM), but also implements it's own filters and policies, following a strict modular design.
 
-Setting up a new Doorman
+To achieve the most accurate decisions, the result of each component (wheter it is a single module in a Server or the result of a server, accounted by another server) is known at any point of time by any component.
 
-    use Mail::Decency::Doorman;
-    my $doorman = Mail::Decency::Doorman->new( {
-        config => '/etc/decency/doorman.yml'
-    } );
-    $doorman->run;
+Furthermore, Decency can be deployed in large distributed structures or on a single mailsystem - whatever you need.
 
-Setting up a new content filter, aka Detective
-
-    use Mail::Decency::Detective;
-    my $detective = Mail::Decency::Detective->new( {
-        config => '/etc/decency/detective.yml'
-    } );
-    $detective->run;
-
-Setting up a new syslog parser
-
-    use Mail::Decency::LogParser;
-    my $syslog_parser = Mail::Decency::LogParser->new( {
-        config => '/etc/decency/log-parser.yml'
-    } );
-    $syslog_parser->run;
-
-
-
-=head1 INTRODUCTION
-
-L<http://www.decency-antispam.org/about>
+Please read L<http://www.decency-antispam.org/about> for more informations.
 
 =head1 SEE ALSO
 
@@ -58,13 +33,9 @@ L<http://www.decency-antispam.org/about>
 
 =item * L<Mail::Decency::Detective>
 
-=item * L<Mail::Decency::LogParser>
-
-=item * http://www.decency-antispam.org
+=item * L<http://www.decency-antispam.org>
 
 =back
-
-
 
 =head1 AUTHOR
 
