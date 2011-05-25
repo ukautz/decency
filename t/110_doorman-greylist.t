@@ -6,6 +6,7 @@ use FindBin qw/ $Bin /;
 use lib "$Bin/lib";
 use lib "$Bin/../lib";
 use MD_Misc;
+no warnings 'once';
 
 my $server;
 BEGIN { 

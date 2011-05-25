@@ -388,7 +388,7 @@ sub _has_a_or_mx {
     my @errors = ();
     
     # has A records ?
-    my $res = $self->resolver->search( $domain, 'A' );
+    my $res = $self->resolver->search( $domain. '.', 'A' );
     push @errors, $self->resolver->errorstring;
     my @a_rec = $res
         ? ( grep {
@@ -404,7 +404,7 @@ sub _has_a_or_mx {
     unless ( @a_rec ) {
         
         # has MX records ?
-        my $res_mx = $self->resolver->search( $domain, 'MX' );
+        my $res_mx = $self->resolver->search( $domain. '.', 'MX' );
         push @errors, $self->resolver->errorstring;
         my @mx_rec = $res_mx ? ( grep { defined $_ && $_->exchange } $res_mx->answer ) : ();
         
@@ -460,7 +460,7 @@ sub _resolute_domain_to_ip {
 sub __get_records {
     my ( $self, $domain, $type ) = @_;
     
-    my $res = $self->resolver->search( $domain, $type );
+    my $res = $self->resolver->search( $domain. '.', $type );
     return unless $res;
     
     my $meth = $type eq 'A' ? 'address' : 'exchange';

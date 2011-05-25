@@ -58,13 +58,12 @@ my $build = Module::Build->new(
     },
     build_requires => {
         Cache::File => 0,
-        DBD => 0,
         DBD::SQLite => 0,
         DBI => 0,
         DBIx::Connector => 0,
         SQL::Abstract::Limit => 0,
-        Module::Build   => '0.2805',
-        Test::More      => 0,
+        Module::Build => '0.2805',
+        Test::More => 0,
         
         # optional, for modules which can be tested
         Mail::SPF => 0,

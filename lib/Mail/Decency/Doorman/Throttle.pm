@@ -20,14 +20,13 @@ Mail::Decency::Doorman::Throttle
 
 =head1 DESCRIPTION
 
-Throtle mail sending for dedicated sources (sender ip, sender username, sender address, "account")
+Throttle mail sending for dedicated sources (sender ip, sender username, sender address, "account")
 
 =over
 
-=item * client address
+=item * client address aka sender IP
 
 The IP of the client connecting to the server.
-
 
 =item * sender username, sender domain, sender address
 

@@ -122,7 +122,7 @@ ok( scalar( grep { $_->{ last_update } <= time() } @r2 ) == 10,
     "Doorman results DB update time" );
 
 # period looks good
-my $dt = DateTime->now( time_zone => 'local' );
+$dt = DateTime->now( time_zone => 'local' );
 ok( scalar( grep {
     $_->{ start } == $dt->clone->truncate( to => $_->{ period } )->epoch
     || $_->{ start } == $dt->clone->add( $_->{ period }.'s' => -1 )
@@ -141,7 +141,7 @@ ok( scalar( grep { $_->{ amount } == 2 } @r3 ) == 5, "Doorman final state DB cal
 ok( scalar( grep { $_->{ status } eq 'ok' } @r3 ) == 5, "Doorman final state DB state" );
 
 # period looks good
-my $dt = DateTime->now( time_zone => 'local' );
+$dt = DateTime->now( time_zone => 'local' );
 ok( scalar( grep {
     $_->{ start } == $dt->clone->truncate( to => $_->{ period } )->epoch
     || $_->{ start } == $dt->clone->add( $_->{ period }.'s' => -1 )
