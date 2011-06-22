@@ -152,7 +152,6 @@ has to_domain => ( is => 'rw', isa => "Str" );
 
 =head2 identifier : Str
 
-The domain part ot the RCPT TO
 
 =cut
 

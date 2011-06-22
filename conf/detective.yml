@@ -1,12 +1,9 @@
 ---
 
 spool_dir: /var/spool/decency
-
 accept_scoring: 1
 doorman_verify_key: sign.pub
-
 recipient_delimiter: '+'
-
 notification_from: 'Postmaster <postmaster@localhost>'
 
 # include:
@@ -56,7 +53,11 @@ database:
     # type: MongoDB
     type: DBD
     args:
-        - 'dbi:SQLite:dbname=/var/spool/decency/database.db'
+        - 'dbi:mysql:decency_1:localhost:3306'
+        - root
+        - xxx
+    # args:
+    #     - 'dbi:SQLite:dbname=/var/spool/decency/database.db'
     # type: LDAP
     # host: 127.0.0.1:389
     # user: cn=admin,dc=nodomain
@@ -103,14 +104,14 @@ virus:
 modules:
     - DeepDNSBL: "detective/deep-dnsbl.yml"
     - DKIMVerify: "detective/dkim-verify.yml"
-    # - MimeAttribs: "detective/mime-attribs.yml"
+    - MimeAttribs: "detective/mime-attribs.yml"
     # - ClamAV: detective/clamav.yml
-    # - Bogofilter: detective/bogofilter.yml
-    # - DSPAM: detective/dspam.yml
-    # - CRM114: detective/crm114.yml
-    # - Razor: detective/razor.yml
-    # - HoneyCollector: detective/honey-collector.yml
-    # - SpamAssassin: detective/spamassassin.yml
+    - Bogofilter: detective/bogofilter.yml
+    - DSPAM: detective/dspam.yml
+    - CRM114: detective/crm114.yml
+    - Razor: detective/razor.yml
+    - HoneyCollector: detective/honey-collector.yml
+    - SpamAssassin: detective/spamassassin.yml
     - Archive: detective/archive.yml
     # - LiveStats: detective/live-stats.yml
 

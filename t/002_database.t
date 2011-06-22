@@ -25,18 +25,22 @@ SKIP: {
     subtest "DBD::SQLite" => sub {
         plan tests => $db_tests + 2;
         
-        # get mongo connection
+        # create SQLIte file
         my %create;
         my $file = MD_DB::sqlite_file( 1 );
         $create{ args } = [ "dbi:SQLite:dbname=$file" ];
         
+        # create and test database
         my $db = eval { test_db( "DBD", $server, %create ) }
             or diag( "Error Test: $@" );
-        unlink $file unless $ENV{ NO_DB_CLEANUP };
         
+        # cleanup
+        unlink $file unless $ENV{ NO_DB_CLEANUP };
         eval { $db->disconnect(); };
         ok( ! $@, "Cleanup test database" ) or diag( "Error Cleanup: $@" );
     };
+    
+    
 };
 
 SKIP: {

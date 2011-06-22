@@ -326,7 +326,8 @@ sub cleanup {
     eval { $self->mime_fh->close }; # do silent, don't care for errors
     
     # clear mime
-    $self->mime_filer->purge;
+    eval { $self->mime_filer->purge; };
+    warn "Error in purge: $@\n" if $@;
     
     # remove store file
     unlink $self->store

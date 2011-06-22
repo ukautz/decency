@@ -86,6 +86,9 @@ my $build = Module::Build->new(
         Cache::Memcache => 0,
         Cache::Memcache::XS => 0,
         
+        # Milter
+        Sendmail::PMilter => 0,
+        
         # should not be installed via perl .. rather by distri installer
         #Mail::SpamAssassin => 0,
         

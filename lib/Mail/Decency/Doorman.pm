@@ -29,7 +29,6 @@ use Mail::Decency::Helper::Config qw/
     merged_config
 /;
 
-use constant CRLF => qq[\x0D\x0A]; # RFC 2821, 2.3.7
 use constant ALLOWED_RESPONSE_STATES => qr/ \A (?:
     PREPEND |
     DUNNO |
@@ -170,7 +169,8 @@ has forward_sign_key  => ( is => 'rw', isa => 'Str', predicate => 'has_forward_s
     # check file
     $key_file = $self->config_dir . "/$key_file"
         if $self->has_config_dir && ! -f $key_file;
-    die "Could not access doorman_sign_pub key file '$key_file'\n"
+    die "Could not access doorman_sign_pub key file '$key_file'".
+        ( $self->has_config_dir ? ' (config dir: '. $self->config_dir. ')' : '' ). "\n"
         unless -f $key_file;
     
     # read key
@@ -305,83 +305,76 @@ Returns subref to handlers, called by L<Mail::Decency::Core::POEForking::Postfix
 
 =cut
 
-sub get_handlers {
-    my ( $self ) = @_;
+sub handle_safe {
+    my ( $self, $attrs_ref ) = @_;
     
-    weaken( my $self_weak = $self );
+    # don bother with loopback addresses
+    return {
+        action => 'DUNNO'
+    } if ( ! $ENV{ HANDLE_LOCAL_CONNECTIONS }
+        && $self->pass_localhost
+        && is_local_host( $attrs_ref->{ client_address } )
+    );
     
-    return sub {
-        my ( $server, $attrs_ref ) = @_;
-        my $self = $self_weak;
-        
-        # don bother with loopback addresses
-        return {
-            action => 'DUNNO'
-        } if ( ! $ENV{ HANDLE_LOCAL_CONNECTIONS }
-            && $self->pass_localhost
-            && is_local_host( $attrs_ref->{ client_address } )
-        );
-        
-        # start handling-session
-        $self->session_init( $attrs_ref );
-        
-        # start
-        my $start_time_ref = [ gettimeofday() ];
-        
-        # on global ignore list?
-        return {
-            action => 'DUNNO'
-        } if defined $self->ignore_ips->{ $self->session->ip };
-        
-        # apply all policies
-        my $state = 'ongoing';
-        foreach my $module( @{ $self->childs } ) {
-            
-            # get handle (bool) and error (string?)
-            ( my $handle, $state, my $err )
-                = $self->handle_child( $module, [ $self, $attrs_ref ] );
-            
-            # no handle
-            next unless $handle;
-            
-            # finish, if session data in a final state
-            #last if $self->session->response ne 'DUNNO';
-            last if lc( $state ) ne 'ongoing';
-        }
-        
-        # run finish hooks
-        ( $state ) = $self->run_hooks( 'finish', [ $state ] );
+    # start handling-session
+    $self->session_init( $attrs_ref );
     
-        # time diff
-        # my $run_diff = tv_interval( $start_time_ref, [ gettimeofday() ] );
-        # ( $status, $final_code ) = $self->run_hooks( 'finish', [ {
-        #     status     => $status,
-        #     diff       => $run_diff,
-        #     details    => join( ' ## ', @{ $self->session->spam_details } )
-        # } ] );
-        
-        # update server stats ?
-        eval {
-            $self->update_server_stats( $state )
-                if $self->enable_server_stats;
-        };
-        $self->logger->error( "Error in server stats: $@" ) if $@;
+    # start
+    my $start_time_ref = [ gettimeofday() ];
     
-        # write reporting ?
-        eval {
-            $self->write_report( $state, join( ' ## ',
-                @{ $self->session->spam_details } ) )
-                if $self->reporting_enabled;
-        };
-        $self->logger->error( "Error in reporting: $@" ) if $@;
+    # on global ignore list?
+    return {
+        action => 'DUNNO'
+    } if defined $self->ignore_ips->{ $self->session->ip };
+    
+    # apply all policies
+    my $state = 'ongoing';
+    foreach my $module( @{ $self->childs } ) {
         
-        # clear info and stash to cache
-        my $response = $self->session_cleanup();
+        # get handle (bool) and error (string?)
+        ( my $handle, $state, my $err )
+            = $self->handle_child( $module, [ $self, $attrs_ref ] );
         
-        # return final answer (REJECT, OK, DUNNO, 4xx, 5xx, ..) inclusive message
-        return {
-            action => $response
-        };
+        # no handle
+        next unless $handle;
+        
+        # finish, if session data in a final state
+        #last if $self->session->response ne 'DUNNO';
+        last if lc( $state ) ne 'ongoing';
+    }
+    
+    # run finish hooks
+    ( $state ) = $self->run_hooks( 'finish', [ $state ] );
+
+    # time diff
+    # my $run_diff = tv_interval( $start_time_ref, [ gettimeofday() ] );
+    # ( $status, $final_code ) = $self->run_hooks( 'finish', [ {
+    #     status     => $status,
+    #     diff       => $run_diff,
+    #     details    => join( ' ## ', @{ $self->session->spam_details } )
+    # } ] );
+    
+    # update server stats ?
+    eval {
+        $self->update_server_stats( $state )
+            if $self->enable_server_stats;
+    };
+    $self->logger->error( "Error in server stats: $@" ) if $@;
+
+    # write reporting ?
+    eval {
+        $self->write_report( $state, join( ' ## ',
+            @{ $self->session->spam_details } ) )
+            if $self->reporting_enabled;
+    };
+    $self->logger->error( "Error in reporting: $@" ) if $@;
+    
+    # clear info and stash to cache
+    my $response = $self->session_cleanup();
+    
+    # return final answer (REJECT, OK, DUNNO, 4xx, 5xx, ..) inclusive message
+    return {
+        action => $response
     };
 }
 

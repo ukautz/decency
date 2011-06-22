@@ -218,6 +218,7 @@ sub get_static_file {
     my $self = shift;
     my ( $th, $tn ) = $self->__get_temp_file( @_ );
     $self->add_file_handle( [ $th, $tn, 1 ] );
+    $tn =~ s#//+#/#g;
     return ( $th, $tn );
 }
 

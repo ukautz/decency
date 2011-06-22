@@ -126,6 +126,9 @@ Read config file , read includes ..
 sub parse_config {
     my ( $self ) = @_;
     
+    die "Config required\n"
+        unless $self->config;
+    
     # parse config -> find all "includes"
     if ( defined $self->config->{ include } ) {
         my @includes = ref( $self->config->{ include } )

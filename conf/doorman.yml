@@ -1,19 +1,11 @@
 ---
 
 spam_threshold: -100
-
 default_reject_message: "use decency"
-
-#force_check_local: 1
-#disable_prepend: 0
-#no_reject_detail: 0
 no_session_identifier: 1
-
 forward_scoring: 1
 forward_sign_key: sign.key
-
 pass_localhost: 0
-
 recipient_delimiter: '+'
 
 stats:
@@ -62,7 +54,11 @@ database:
     # type: MongoDB
     type: DBD
     args:
-        - 'dbi:SQLite:dbname=/var/spool/decency/database.db'
+        - 'dbi:mysql:decency_1:localhost:3306'
+        - root
+        - xxx
+    # args:
+    #     - 'dbi:SQLite:dbname=/var/spool/decency/database.db'
     # type: LDAP
     # host: 127.0.0.1:389
     # user: cn=admin,dc=nodomain

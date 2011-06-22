@@ -23,7 +23,7 @@ use version 0.74; our $VERSION = qv( "v0.2.0" );
         id INTEGER PRIMARY KEY,
         from_domain VARCHAR(255),
         to_domain VARCHAR(255),
-        fingerprint VARCHAR(255),
+        fingerprint VARCHAR(160),
         subject VARCHAR(255),
         ip VARCHAR(39)
     );
@@ -45,7 +45,7 @@ has schema_definition => ( is => 'ro', isa => 'HashRef[HashRef]', default => sub
             permit => {
                 from_domain => [ varchar => 255 ],
                 to_domain   => [ varchar => 255 ],
-                fingerprint => [ varchar => 255 ],
+                fingerprint => [ varchar => 160 ],
                 subject     => [ varchar => 255 ],
                 ip          => [ varchar => 39 ],
                 -unique     => [ 'from_domain', 'to_domain', 'fingerprint', 'subject', 'ip' ]

@@ -1,9 +1,9 @@
-package Mail::Decency::Core::POEForking::SMTP;
+package Mail::Decency::Core::POEForking::PreQueueSMTP;
 
 use strict;
 use warnings;
 
-use version 0.74; our $VERSION = qv( "v0.1.5" );
+use version 0.74; our $VERSION = qv( "v0.2.0" );
 
 use feature 'switch';
 
@@ -17,6 +17,7 @@ use POE qw/
 /;
 
 use File::Temp qw/ tempfile /;
+use File::Copy qw/ copy /;
 use Mail::Decency::Detective::Core::Constants;
 use Mail::Decency::Core::POEFilterSMTP;
 use Socket qw/ inet_ntoa /;
@@ -24,11 +25,11 @@ use Data::Dumper;
 
 =head1 NAME
 
-Mail::Decency::Core::POEForking::SMTP
+Mail::Decency::Core::POEForking::PreQueueSMTP
 
 =head1 DESCRIPTION
 
-SMTP Server for the Detective
+SMTP server for Defender
 
 =head1 METHODS
 
@@ -86,18 +87,6 @@ sub smtp_start {
         @_[ KERNEL, SESSION, HEAP ]
     );
     
-    # # tell the parent session we are here
-    # $kernel->post( $heap->{ parent }, "new_client_session", $session );
-    
-    # # start new r/w on the socket
-    # $heap->{ client } = POE::Wheel::ReadWrite->new(
-    #     Handle       => $heap->{ socket },
-    #     Filter       => Mail::Decency::Core::POEFilterSMTP->new(),
-    #     InputEvent   => "smtp_input",
-    #     ErrorEvent   => "smtp_error",
-    #     FlushedEvent => "smtp_flush",
-    # );
-    
     # say hello
     $heap->{ client }->put( 220 => "Welcome" );
 }
@@ -111,14 +100,18 @@ Handling input
 
 sub smtp_input {
     my ( $kernel, $heap, $session, $input ) = @_[ KERNEL, HEAP, SESSION, ARG0 ];
+        
     return unless $input && ref( $input ) eq 'ARRAY';
     
     # first pass parse
     my ( $cmd, $arg, $line ) = @$input;
+    $ENV{ DEBUG_SMTP } && warn "SMTP IN> $line";
     $arg ||= "";
     
     # being in the DATA part:
     if ( $heap->{ in_data } ) {
+        
+        $ENV{ DEBUG_SMTP } && warn "DATA> $cmd\n"; 
         
         # last final "." -> end of DATA
         if ( $cmd eq '.' ) {
@@ -130,16 +123,27 @@ sub smtp_input {
             $heap->{ in_data } = 0;
             
             # handle input data with decency
-            my ( $ok, $reject_message );
-            eval {
-                ( $ok, $reject_message ) = $heap->{ decency }->handle_safe( {
-                    file => delete $heap->{ mime_file },
-                    from => delete $heap->{ mail_from },
-                    to   => delete $heap->{ rcpt_to },
-                } );
-            };
-            if ( $@ ) {
-                $heap->{ logger }->error( "Error in handler: $@" );
+            my ( $err, $ok, $reject_message );
+            
+            foreach my $rcpt_to( @{ $heap->{ rcpt_to } } ) {
+                my ( $th, $tn ) = tempfile( $heap->{ args }->{ temp_mask }, UNLINK => 0 );
+                copy( $heap->{ mime_file }, $tn );
+                
+                eval {
+                    ( $ok, $reject_message ) = $heap->{ decency }->handle_safe( data => {
+                        file => $tn,
+                        from => $heap->{ mail_from },
+                        to   => $rcpt_to,
+                    } );
+                };
+                $err = $@;
+                close $th if $th;
+                
+                last if $err || ! $ok;
+            }
+            
+            if ( $err ) {
+                $heap->{ logger }->error( "Error in handler: $err" );
                 $heap->{ client }->put( 450 => "Temporary problem" );
             }
             else {
@@ -147,7 +151,7 @@ sub smtp_input {
                 # send bye to client
                 if ( $ok ) {
                     $heap->{ logger }->debug3( "Send 250 to postfix, mail accepted" );
-                    $heap->{ client }->put( 250 => 'Bye ' );
+                    $heap->{ client }->put( 250 => 'DISCARD' );
                 }
                 else {
                     $heap->{ logger }->debug3( "Send 554 to postfix, mail bounced" );
@@ -156,9 +160,9 @@ sub smtp_input {
             }
             
             # close connection to postfix
+            unlink $heap->{ mime_file } if -f $heap->{ mime_file };
             delete $heap->{ $_ }
                 for qw/ mail_from rcpt_to mime_fh mime_file /; # client socket
-            
             
             # back to begin
             $heap->{ in_data } = 0;
@@ -174,7 +178,7 @@ sub smtp_input {
     # not in DATA -> catch SMTP commands
     else {
         
-        $ENV{ DEBUG_SMTP } && warn "> $cmd | $arg\n"; 
+        $ENV{ DEBUG_SMTP } && warn "ENVELOPE> $cmd | $arg\n"; 
         
         # MAIL FROM commmand -> rewrite for handling
         if ( $cmd eq 'MAIL' && $arg =~ /^FROM:\s*(?:<([^>]*?)>|(.*?))\s*$/ ) {
@@ -185,31 +189,74 @@ sub smtp_input {
         # RCPT TO commmand -> rewrite for handling
         elsif ( $cmd eq 'RCPT' && $arg =~ /^TO:\s*(?:<([^>]*?)>|(.*?))\s*$/ ) {
             $cmd = 'RCPT_TO';
-            $heap->{ rcpt_to } = $arg = $1 || $2;
+            push @{ $heap->{ rcpt_to } ||= [] }, $arg = $1 || $2;
+        }
+        
+        # got forwarded envelope data
+        elsif ( $cmd eq 'XFORWARD' ) {
+            my %args = map {
+                my ( $k, $v ) = /^([A-Z]+)=(.*?)$/;
+                ( lc( $k ) => $v );
+            } grep {
+                /^[A-Z]+=/
+            } split( / /, $arg );
+            
+            $heap->{ "client_$_" } = $args{ $_ }
+                for keys %args;
+            print Dumper( { ARGS => \%args } );
         }
         
         # DATA commmand -> init data input
         elsif ( $cmd eq 'DATA' ) {
             
             # not heaving from and to ? not good -> bye to client
-            unless ( $heap->{ rcpt_to } ) {
+            unless ( $heap->{ rcpt_to } && $heap->{ mail_from } ) {
                 
                 # clear heap
-                delete $heap->{ $_ } for qw/ mail_from /;
+                delete $heap->{ $_ } for qw/ mail_from rcpt_to /;
                 
                 # send bye, close client
-                $heap->{ client }->put( 221 => 'Require RCPT TO' );
+                $heap->{ client }->put( 221 => 'Require RCPT TO and MAIL FROM' );
                 
                 return;
             }
             
-            # mark being in data
-            $heap->{ in_data } ++;
+            # handle with policy (Doorman)
+            my ( $ok, $reject_message );
+            foreach my $rcpt_to( @{ $heap->{ rcpt_to } } ) {
+                ( $ok, $reject_message ) = $heap->{ decency }->handle_safe( envelope => {
+                    rcpt_to => $rcpt_to,
+                    map {
+                        ( $_ => $heap->{ $_ } )
+                    } grep {
+                        defined $heap->{ $_ }
+                    } qw/ mail_from client_name client_addr client_helo client_ident /
+                } );
+                last unless $ok;
+            }
             
-            # new temp file in spool dir
-            my ( $th, $tn ) = tempfile( $heap->{ args }->{ temp_mask }, UNLINK => 0 );
-            $heap->{ mime_fh }   = $th;
-            $heap->{ mime_file } = $tn;
+            # not OK, end here
+            unless ( $ok ) {
+                if ( $reject_message =~ /^(\d{3})\s+(.+?)$/ ) {
+                    $heap->{ client }->put( $1 => $2 );
+                }
+                else {
+                    $heap->{ client }->put( 500 => $reject_message );
+                }
+                $heap->{ finished }++;
+            }
+            
+            # all good, go on
+            else {
+                
+                # mark being in data
+                $heap->{ in_data } ++;
+                
+                # new temp file in spool dir
+                my ( $th, $tn ) = tempfile( $heap->{ args }->{ temp_mask }, UNLINK => 0 );
+                $heap->{ mime_fh }   = $th;
+                $heap->{ mime_file } = $tn;
+            }
         }
         
         # RSET .. not out fault ;)
@@ -259,10 +306,18 @@ sub smtp_response {
     
     given ( $cmd ) {
         when ( "EHLO" ) {
-            $heap->{ client }->put( 250 => 'XFORWARD NAME ADDR PROTO HELO', 'OK' );
+            $heap->{ client }->put( 250 => 
+                'DSN',
+                'PIPELINING',
+                'AUTH PLAIN LOGIN',
+                'AUTH=PLAIN LOGIN',
+                'ENHANCEDSTATUSCODES',
+                'XFORWARD NAME ADDR PROTO HELO IDENT SOURCE',
+                'OK'
+            );
         }
         when ( "HELO" ) {
-            $heap->{ client }->put( 250 => 'XFORWARD NAME ADDR PROTO HELO', 'OK' );
+            $heap->{ client }->put( 250 => 'XFORWARD NAME ADDR PROTO HELO IDENT SOURCE', 'OK' );
         }
         when ( "MAIL_FROM" ) {
             $heap->{ client }->put( 250 => 'OK' );
@@ -282,11 +337,11 @@ sub smtp_response {
             $heap->{ finished } ++;
         }
         when ( "XFORWARD" ) {
-            $heap->{ client }->put( 250 => 'Nice, gimme more' );
+            $heap->{ client }->put( 250 => 'OK' );
             $ENV{ DEBUG_SMTP } && warn "> Got forward '$line'\n";
-            $heap->{ finished } ++;
         }
         default {
+            warn "\n******************\nDo not handle: $cmd\n*******************\n\n";
             $heap->{ client }->put( 502 => 'This is not your postfix' );
         }
     }

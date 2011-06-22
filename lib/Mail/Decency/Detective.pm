@@ -358,7 +358,11 @@ sub init {
 
 sub setup {
     my ( $self ) = @_;
+    
+    warn "***\nDetective init PRE \n***\n";
     return if $self->{ inited } ++;
+    
+    warn "***\nDetective init OK\n***\n";
     
     $self->init_cache();
     $self->init_database();
@@ -772,34 +776,44 @@ sub get_handlers {
     
     # { file => '/path/to/file', from => "from@domain.tld", to => "to@domain.tld" }
     return sub {
-        my ( $ref ) = @_;
-        
-        $self_weak->logger->debug3( "Handle new: $ref->{ file }, from: $ref->{ from }, to: $ref->{ to }" );
-        
-        my ( $ok, $message );
-        
-        # better eval that.. the server shold NOT die .
-        eval {
-            
-            # write the from, to, size and such to yaml file
-            open my $fh, ">", $ref->{ file }. ".info"
-                or die "Cannot open '$ref->{ file }' for read\n";
-            
-            print $fh YAML::Dump( $ref );
-            close $fh;
-            
-            ( $ok, $message ) = $self_weak->handle( $ref->{ file }, -s $ref->{ file } );
-        };
-        
-        # log out error
-        if ( $@ ) {
-            $self_weak->logger->error( "Error handling '$ref->{ file }': $@" );
-        }
-        
-        return ( $ok, $message );
+        return $self_weak->handle_safe( @_ );
     }
     
 }
+
+=head2 handle_safe
+
+=cut
+
+sub handle_safe {
+    my ( $self, $ref ) = @_;
+    
+    $self->logger->debug3( "Handle new: $ref->{ file }, from: $ref->{ from }, to: $ref->{ to }" );
+    
+    my ( $ok, $message );
+    
+    # better eval that.. the server shold NOT die .
+    eval {
+        
+        # write the from, to, size and such to yaml file
+        open my $fh, ">", $ref->{ file }. ".info"
+            or die "Cannot open '$ref->{ file }' for read\n";
+        
+        print $fh YAML::Dump( $ref );
+        close $fh;
+        
+        ( $ok, $message )
+            = $self->handle( $ref->{ file }, -s $ref->{ file }, $ref->{ args } || undef );
+    };
+    
+    # log out error
+    if ( $@ ) {
+        $self->logger->error( "Error handling '$ref->{ file }': $@" );
+    }
+    
+    return ( $ok, $message );
+}
+
 
 =head2 handle
 
@@ -810,14 +824,14 @@ Will be called from the job queue
 =cut
 
 sub handle {
-    my ( $self, $file, $size ) = @_;
+    my ( $self, $file, $size, $args_ref ) = @_;
     
     # start
     my $start_time_ref = [ gettimeofday() ];
     
     # setup mail info (mime, from, to and such)
     eval {
-        $self->session_init( $file, $size );
+        $self->session_init( $file, $size, $args_ref );
     };
     if ( $@ ) {
         $self->logger->error( "Cannot init session: $@" );
@@ -877,7 +891,8 @@ sub handle {
     $self->logger->error( "Error in reporting: $@" ) if $@;
     
     # clear all
-    $self->session->cleanup;
+    $self->session->cleanup
+        unless $args_ref->{ no_session_cleanup };
     
     # return the final code to the SMTP server, which will then either force the mta
     #   (postfix) to bounce the mail by rejecting it or accept, to 
@@ -1174,6 +1189,9 @@ Reinject mails to postfix queue, or archive in send-queue
 sub reinject {
     my ( $self, $type ) = @_;
     
+    # do no reinject in encapsulated mode!
+    return DETECTIVE_FINAL_OK if $self->_encapsulated;
+    
     my $reinject_ref = $self->config->{ reinject };
     
     eval {
@@ -1338,7 +1356,10 @@ Inits the L<Mail::Decency::Core::SessionItem::Detective> session object for the 
 =cut
 
 sub session_init {
-    my ( $self, $file, $size ) = @_;
+    my ( $self, $file, $size, $args_ref ) = @_;
+    
+    # init args
+    $args_ref ||= {};
     
     # setup new info
     ( my $init_id = $file ) =~ s/[\/\\]/-/g;
@@ -1360,23 +1381,34 @@ sub session_init {
     # RETREIVE QUEUE ID, UPDATE FROM DETECTIVE CACHE
     #
     
-    # get last queue ID
-    my @received = $session->mime->head->get( 'Received' );
-    my $received = shift @received;
-    if ( $received && $received =~ /E?SMTP id ([A-Z0-9]+)/ms ) {
-        my $id = $1;
-        $session->id( $id );
-        
-        # try read info from Doorman from cache
-        my $cached = $self->cache->get( "QUEUE-$id" ) || $self->cache->get( "DOORMAN-$id" );
-        $session->update_from_cache( $cached )
-            if $cached && ref( $cached );
+    # having id from args
+    if ( exists $args_ref->{ queue_id } ) {
+        $session->id( $args_ref->{ queue_id } )
+            if $args_ref->{ queue_id };
     }
     
-    # oops, this should not happen, maybe in debug cases, if mails
-    #   are directyly injected into the Detective ?!
+    # try get from somewhere else
     else {
-        $self->logger->error( "Could not determine Queue ID! No 'Received' header found! Postfix should set this!" );
+        
+        # get last queue ID
+        my @received = $session->mime->head->get( 'Received' );
+        my $received = shift @received;
+        if ( $received && $received =~ /E?SMTP id ([A-Z0-9]+)/ms ) {
+            my $id = $1;
+            $session->id( $id );
+            
+            # try read info from Doorman from cache
+            my $cached = $self->cache->get( "QUEUE-$id" ) || $self->cache->get( "DOORMAN-$id" );
+            $session->update_from_cache( $cached )
+                if $cached && ref( $cached );
+            #$self->loggger->info( "
+        }
+        
+        # oops, this should not happen, maybe in debug cases, if mails
+        #   are directyly injected into the Detective ?!
+        elsif ( ! $self->_encapsulated ) {
+            $self->logger->error( "Could not determine Queue ID! No 'Received' header found! Postfix should set this!" );
+        }
     }
     
     # retreive scoring from Doorman, if any

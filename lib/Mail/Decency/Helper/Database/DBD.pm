@@ -13,10 +13,11 @@ use Data::Dumper;
 use DBIx::Connector;
 use SQL::Abstract::Limit;
 
-has db   => ( is => "ro", isa => "DBIx::Connector" );
-has sql  => ( is => "ro", isa => "SQL::Abstract" );
-has args => ( is => "ro", isa => "ArrayRef", required => 1 );
+has db         => ( is => "ro", isa => "DBIx::Connector" );
+has sql        => ( is => "ro", isa => "SQL::Abstract" );
+has args       => ( is => "ro", isa => "ArrayRef", required => 1 );
 has quote_char => ( is => 'rw', isa => 'Str', default => q{"} );
+has create_conf => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
 
 sub BUILD {
     my ( $self ) = @_;
@@ -36,6 +37,12 @@ sub BUILD {
         #quote_char=> $self->quote_char
         limit_dialect => $self->{ db }->dbh
     );
+    
+    # quotings
+    if ( $self->args->[0] =~ /^dbi:mysql:/i ) {
+        $self->quote_char( q{`} );
+        $self->create_conf->{ tables } = [ 'TYPE=myisam', 'DEFAULT CHARSET=latin1' ];
+    }
     
     return $self;
 }
@@ -438,8 +445,13 @@ sub setup_handle {
     
     my @stm;
     
-    push @stm, scalar $self->sql->generate(
-        'create table', "${schema}_${table}" => \@columns );
+    push @stm, do {
+        my $sql = scalar $self->sql->generate(
+            'create table', "${schema}_${table}" => \@columns );
+        $sql .= join( ' ', @{ $self->create_conf->{ tables } } )
+            if defined $self->create_conf->{ tables };
+        $sql;
+    };
     
     push @stm, scalar $self->sql->generate(
         'create index', $_->[0] => [ map {

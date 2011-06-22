@@ -299,6 +299,9 @@ sub build_dir {
         $dir =~ s/\%hm\%/$hm/g;
     }
     
+    # cleanup dir
+    $dir =~ s#//+#/#g;
+    
     return $dir;
 }
 

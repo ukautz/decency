@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use Test::More tests => 35;
+use Test::More tests => 36;
 
 #
 # VERSION 0.1.6
@@ -16,6 +16,7 @@ BEGIN {
         DateTime    0
         Digest::MD5    0
         Digest::SHA    0
+        Email::Valid    0
         File::Path    2.07
         File::Temp    0
         IO::String    0

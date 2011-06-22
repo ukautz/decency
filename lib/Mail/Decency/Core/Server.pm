@@ -108,6 +108,15 @@ Hooks for server hooks
 has _hooks => ( is => 'ro', isa => 'HashRef', default => sub { {} } );
 
 
+=head2 _encapsulated : Bool
+
+For Defender usage, ecanpsulate Doorman or Detective within Defender.
+
+=cut
+
+has _encapsulated => ( is => 'rw', isa => 'Bool', default => 0 );
+
+
 =head1 METHODS
 
 =head2 init
@@ -131,17 +140,19 @@ sub init_postfix_server {
     my ( $self ) = @_;
     
     # check server config
-    die "server config missing!\n"
-        unless defined $self->config->{ server } && ref( $self->config->{ server } ) eq 'HASH';
-    die "set either host and port OR socket for server\n"
-        if (
-            ! defined $self->config->{ server }->{ host }
-            && ! defined $self->config->{ server }->{ port }
-            && ! defined $self->config->{ server }->{ socket }
-        ) || (
-            defined $self->config->{ server }->{ host }
-            && defined $self->config->{ server }->{ socket }
-        );
+    unless ( $self->_encapsulated ) {
+        die "server config missing!\n"
+            unless defined $self->config->{ server } && ref( $self->config->{ server } ) eq 'HASH';
+        die "set either host and port OR socket for server\n"
+            if (
+                ! defined $self->config->{ server }->{ host }
+                && ! defined $self->config->{ server }->{ port }
+                && ! defined $self->config->{ server }->{ socket }
+            ) || (
+                defined $self->config->{ server }->{ host }
+                && defined $self->config->{ server }->{ socket }
+            );
+    }
     
     return 1;
 }
@@ -419,6 +430,7 @@ sub load_modules {
         my ( $name, $config_ref ) = %$module_ref;
         $self->logger->debug1( "Load module '$name' for '". ref( $self ). "'" );
         my $module = $self->gen_child( ref( $self ) => $name => $config_ref );
+        next unless $module;
         
         # add to meta list of childs
         push @{ $self->childs }, $module;

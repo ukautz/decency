@@ -75,10 +75,11 @@ die <<HELP if $opt{ help };
 
 Usage: $0 --class <classname> --config <configfile> --pidfile <pidfile>
 
-    --class | -a <doorman|detective>
+    --class | -a <doorman|detective|defender>
         What kind of server to start ?
             doorman = Mail::Decency::Doorman
             detective = Mail::Decency::Detective
+            defender = Mail::Decency::Defender
     
     --config | -c <file>
         Path to config .. 
@@ -160,8 +161,8 @@ Usage: $0 --class <classname> --config <configfile> --pidfile <pidfile>
 HELP
 
 # check required parameters
-die "Provide --class <doorman|detective>\n"
-    unless $opt{ class } && $opt{ class } =~ /^(?:doorman|detective)$/;
+die "Provide --class <doorman|detective|defender>\n"
+    unless $opt{ class } && $opt{ class } =~ /^(?:doorman|detective|defender)$/;
 
 # switch user / group
 ( $opt{ user }, $opt{ group } ) = switch_user_group( $opt{ user }, $opt{ group } );
@@ -181,6 +182,7 @@ $opt{ pid } ||= "/tmp/$opt{ class }.pid";
 my %map = qw/
     doorman    Doorman
     detective  Detective
+    defender   Defender
 /;
 
 # check wheter we can load the server class

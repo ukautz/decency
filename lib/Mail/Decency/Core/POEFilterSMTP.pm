@@ -76,6 +76,7 @@ sub put {
     # return
     #   250 OK
     if ( $#$lines == 0 ) {
+        $ENV{ DEBUG_SMTP } && warn "SMTP OUT> $code @{$lines}\n";
         return $self->SUPER::put( [ "$code @{$lines}" ] );
     }
     
@@ -83,9 +84,12 @@ sub put {
     #   250-something
     #   250 OK
     my @output;
-    push @output, "$code-$lines->[$_]" for 0 .. $#$lines - 1;
+    for my $cnt( 0 .. $#$lines - 1 ) {
+        $ENV{ DEBUG_SMTP } && warn "SMTP OUT> $code-$lines->[$cnt]\n";
+        push @output, "$code-$lines->[$cnt]" ;
+    }
+    $ENV{ DEBUG_SMTP } && warn "SMTP OUT> $code $lines->[-1]\n";
     push @output, "$code $lines->[-1]";
-    $ENV{ SMTP_DEBUG } && print "OUT> ". join( "OUT> ", map { "$_\n" } @output ). "\n";
     
     return $self->SUPER::put( \@output );
 }
