@@ -89,7 +89,7 @@ sub init {
     my ( $self ) = @_;
     
     # check blacklists
-    die "DNSBL: Require 'blacklist' as array\n"
+    DD::cop_it "DNSBL: Require 'blacklist' as array\n"
         unless defined $self->config->{ blacklist }
         && ref( $self->config->{ blacklist } ) eq 'ARRAY';
     
@@ -97,7 +97,7 @@ sub init {
     my $num = 1;
     my @blacklists = ();
     foreach my $ref( @{ $self->config->{ blacklist } } ) {
-        die "DNSBL: Blacklist $num is not a hashref\n"
+        DD::cop_it "DNSBL: Blacklist $num is not a hashref\n"
             unless ref( $ref ) eq 'HASH';
         push @blacklists, {
             domain => $ref->{ host }

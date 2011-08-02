@@ -20,7 +20,7 @@ sub throw {
   my ($inv) = shift;
 
   if (blessed $inv) {
-    confess "throw called on Throwable object with arguments" if @_;
+    die "throw called on Throwable object with arguments" if @_;
     die $inv;
   }
 
@@ -56,7 +56,7 @@ version 0.102080
 
 =head1 DESCRIPTION
 
-Same as L<Throwable> but based on L<Mouse> instead of L<Moose>
+STOLEN!! Same as L<Throwable> but based on L<Mouse> instead of L<Moose>
 
 Throwable is a role for classes that are meant to be thrown as exceptions to
 standard program flow.  It is very simple and does only two things: saves any

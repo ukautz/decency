@@ -90,7 +90,7 @@ has pass_for_collection => ( is => 'rw', isa => 'Bool', default => 0 );
 sub init {
     my ( $self ) = @_;
     
-    die "Require either addresses or domains to run!\n"
+    DD::cop_it "Require either addresses or domains to run!\n"
         unless $self->config->{ addresses } || $self->config->{ domains };
     
     # init addresses 
@@ -107,7 +107,7 @@ sub init {
             
             # having hashref -> using exceptions
             if ( ref( $ref ) ) {
-                die "Missing 'domain' in domain $count\n"
+                DD::cop_it "Missing 'domain' in domain $count\n"
                     unless $ref->{ domain };
                 $self->domains->{ $ref->{ domain } } = { map {
                     ( $_ => 1 );

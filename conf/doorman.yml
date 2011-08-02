@@ -54,7 +54,7 @@ database:
     # type: MongoDB
     type: DBD
     args:
-        - 'dbi:mysql:decency_1:localhost:3306'
+        - 'dbi:mysql:decency_2:localhost:3306'
         - root
         - xxx
     # args:
@@ -69,7 +69,7 @@ database:
 server:
     host: 127.0.0.1
     port: 15000
-    instances: 3
+    instances: 1
 
 modules:
     - Basic: doorman/basic.yml

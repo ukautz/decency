@@ -39,7 +39,7 @@ sub init {
             if defined $self->config->{ $meth };
     }
     
-    die "Require at least stream_log or accumulate\n"
+    DD::cop_it "Require at least stream_log or accumulate\n"
         if ! $self->stream_log && ! $self->accumulate;
     
 }

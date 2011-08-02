@@ -373,7 +373,10 @@ sub update_server_stats {
                 } );
             }
         };
-        $self->logger->error( "Error updating servers stats: $@" ) if $@;
+        if ( my $err = $@ ) {
+            $self->logger->error( "Error updating servers stats: $err" );
+            $ENV{ DECENCY_DEBUG_STATS } && warn longmess( $err );
+        }
     }
     
     return;

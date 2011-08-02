@@ -17,9 +17,11 @@ use Time::HiRes qw/ tv_interval gettimeofday /;
 use Mail::Decency::Helper::Cache;
 use Mail::Decency::Helper::Database;
 use Mail::Decency::Helper::Logger;
+use Proc::ProcessTable;
 
 use YAML;
 
+use overload '""' => \&get_name;
 
 =head1 NAME
 
@@ -60,6 +62,8 @@ has childs => (
 
 =head2 is_child : Bool
 
+Whether we are in the master process or not
+
 =cut
 
 has is_child => (
@@ -70,6 +74,24 @@ has is_child => (
         this_is_a_child => 'set'
     },
     default   => 0
+);
+
+=head2 child_pids : HashRef[Int]
+
+The list of child pids, if this is the master.
+
+=cut
+
+has child_pids => (
+    is        => 'ro',
+    isa       => 'HashRef[Int]',
+    traits    => [qw/ MouseX::NativeTraits::HashRef /],
+    handles   => {
+        add_child_pid    => 'set',
+        remove_child_pid => 'delete',
+        is_child_pid     => 'exists'
+    },
+    default   => sub { {} }
 );
 
 =head2 database : Mail::Decency::Helper::Database
@@ -108,13 +130,22 @@ Hooks for server hooks
 has _hooks => ( is => 'ro', isa => 'HashRef', default => sub { {} } );
 
 
-=head2 _encapsulated : Bool
+=head2 encapsulated : Bool
 
 For Defender usage, ecanpsulate Doorman or Detective within Defender.
 
 =cut
 
-has _encapsulated => ( is => 'rw', isa => 'Bool', default => 0 );
+has encapsulated => ( is => 'rw', isa => 'Bool', default => 0 );
+
+
+=head2 encapsulated_server
+
+For defender usage, this is the Defender from Perspective of Detective or Doorman
+
+=cut
+
+has encapsulated_server => ( is => 'rw' );
 
 
 =head1 METHODS
@@ -126,8 +157,20 @@ Init class for the server
 =cut
 
 sub init {
-    die "Init method has to be overwritten by server methosd\n";
+    DD::cop_it "Init method has to be overwritten by server methosd\n";
 }
+
+=head2 get_name
+
+Used for the overloaded string context
+
+=cut
+
+sub get_name {
+    ( my $n = ref( shift ) ) =~ s/^.+://;
+    $n;
+}
+
 
 
 =head2 init_postfix_server
@@ -140,10 +183,10 @@ sub init_postfix_server {
     my ( $self ) = @_;
     
     # check server config
-    unless ( $self->_encapsulated ) {
-        die "server config missing!\n"
+    unless ( $self->encapsulated ) {
+        DD::cop_it "server config missing!\n"
             unless defined $self->config->{ server } && ref( $self->config->{ server } ) eq 'HASH';
-        die "set either host and port OR socket for server\n"
+        DD::cop_it "set either host and port OR socket for server\n"
             if (
                 ! defined $self->config->{ server }->{ host }
                 && ! defined $self->config->{ server }->{ port }
@@ -194,7 +237,7 @@ sub init_cache {
     my ( $self ) = @_;
     
     # setup cache
-    die "cache config missing!\n"
+    DD::cop_it "cache config missing!\n"
         unless defined $self->config->{ cache };
     $self->{ cache } = blessed( $self->config->{ cache } )
         ? $self->config->{ cache }
@@ -215,7 +258,7 @@ sub init_database {
     my ( $self ) = @_;
     
     # setup cache
-    die "database config missing!\n"
+    DD::cop_it "database config missing!\n"
         unless defined $self->config->{ database };
     
     if ( blessed( $self->config->{ database } ) ) {
@@ -223,13 +266,13 @@ sub init_database {
     }
     else {
         my $type = $self->config->{ database }->{ type }
-            or die "Missing type for database (main)!\n";
+            or DD::cop_it "Missing type for database (main)!\n";
         weaken( my $self_weak = $self );
         eval {
             $self->{ database } = Mail::Decency::Helper::Database
                 ->create( $type => $self->config->{ database }, $self_weak );
         };
-        die "Cannot create main database: $@\n" if $@;
+        DD::cop_it "Cannot create main database: $@\n" if $@;
     }
     
     # copy logger
@@ -285,7 +328,7 @@ Run the server
 =cut
 
 sub run {
-    die "Run method has to be overwritten my server\n";
+    DD::cop_it "Run method has to be overwritten my server\n";
 }
 
 
@@ -305,7 +348,7 @@ sub gen_child {
                 $self->config_dir( $self->config->{ config_dir } );
             }
             else {
-                die "Provided config_dir '". $self->config->{ config_dir }. "' is not a directory or not readable\n";
+                DD::cop_it "Provided config_dir '". $self->config->{ config_dir }. "' is not a directory or not readable\n";
             }
         }
         
@@ -320,11 +363,11 @@ sub gen_child {
                 $config_ref = YAML::LoadFile( $config_ref );
             };
             if ( $@ ) {
-                die "Error loading config file '$config_ref' for $name: $@\n";
+                DD::cop_it "Error loading config file '$config_ref' for $name: $@\n";
             }
         }
         else {
-            die "Sorry, cannot find config file '$config_ref' for $name. (config_dir: ". ( $self->has_config_dir ? $self->config_dir : "not set" ). ")\n"; 
+            DD::cop_it "Sorry, cannot find config file '$config_ref' for $name. (config_dir: ". ( $self->has_config_dir ? $self->config_dir : "not set" ). ")\n"; 
         }
     }
     
@@ -344,14 +387,14 @@ sub gen_child {
     my $database;
     if ( defined $config_ref->{ database } ) {
         my $type = $config_ref->{ database }->{ type }
-            or die "Missing required 'type' for database ($name)!\n";
+            or DD::cop_it "Missing required 'type' for database ($name)!\n";
         weaken( my $self_weak = $self );
         eval {
             $database = Mail::Decency::Helper::Database
                 ->create( $type => $config_ref->{ database }, $self_weak );
         };
         $database->server( $self_weak );
-        die "Cannot create database for $name: $@\n" if $@;
+        DD::cop_it "Cannot create database for $name: $@\n" if $@;
     }
     else {
         weaken( $database = $self->database );
@@ -359,6 +402,7 @@ sub gen_child {
     
     # determine module base
     my @module_classes = ( "${base}::${name}", "${base}::${name}" );
+    unshift @module_classes, $name if $name =~ /::/;
     $module_classes[0] =~ s/::Decency::/::DecencyX::/;
     my $module;
     foreach my $module_class( @module_classes ) {
@@ -367,7 +411,7 @@ sub gen_child {
             last;
         };
     }
-    die "Missing Doorman module '$name' (tried: ". join( ', ', @module_classes ). ")\n"
+    DD::cop_it "Missing module in server '$self': '$name' (tried: ". join( ', ', @module_classes ). ")\n"
         unless $module;
     
     # create instance of sub module
@@ -405,12 +449,12 @@ sub gen_child {
         if ( $obj->can( 'check_database' ) && ! $ENV{ DECENCY_NO_CHECK_DATABASE } ) {
             ( my $db_class = ref( $self->database ) ) =~ s/^.+:://;
             $obj->check_database( $obj->schema_definition )
-                or die "Please create the database yourself (class: $db_class)\n";
+                or DD::cop_it "Please create the database yourself (class: $db_class)\n";
         }
         
     };
     
-    die "Error creating $name: $@\n" if $@;
+    DD::cop_it "Error creating $name: $@\n" if $@;
     
     
     return $obj;
@@ -493,11 +537,50 @@ sub handle_child {
         
         # set alarm if timeout enabed
         my $alarm = \( local $SIG{ ALRM } );
+        my $module_name = "$child";
         if ( $child->timeout ) {
             $$alarm = sub {
+                
+                # get timeout value
+                my $timeout = sprintf( '%0.2f',
+                    tv_interval( $start_time_ref, [ gettimeofday() ] ) );
+                
+                # get kill signal (normally: KILL)
+                my $kill_signal = $child->timeout_child_kill_signal || 9;
+                
+                # if not disabled
+                if ( $kill_signal ) {
+                    
+                    # get childs processes and rip them apart
+                    my $ps = Proc::ProcessTable->new;
+                    my $pid = $$;
+                    
+                    # retreive actual child pids
+                    my @child_pids = map { $_->pid } grep { $_->ppid == $pid } @{ $ps->table };
+                    
+                    # in master: filter out the child-server pids, those shall not be killed
+                    @child_pids = grep { ! $self->is_child_pid( $_ ) } @child_pids
+                        unless $self->is_child;
+                    
+                    # having any (still) running childs -> perform the kill
+                    if ( @child_pids ) {
+                        $self->logger->error( "Killing timeout child proceses ". join( ',', @child_pids ). " spawned from $module_name with $kill_signal after $timeout seconds" );
+                        kill $kill_signal, @child_pids;
+                    }
+                }
+                
+                # unhandled timeout
+                else {
+                    $self->logger->error( "Unhandled timeout in module $module_name after $timeout seconds" );
+                }
+                
+                # die here with proper exception
                 Mail::Decency::Core::Exception::Timeout->throw( { message => "Timeout" } );
             };
             alarm( $child->timeout + 1 );
+        }
+        else {
+            warn "NO TIMEOUT\n";
         }
         
         # check size.. if to big for filter -> don't handle
@@ -569,7 +652,7 @@ sub handle_child {
 =cut
 
 sub handle_error {
-    die "handle_error has to be overwritten by class";
+    DD::cop_it "handle_error has to be overwritten by class";
 }
 
 =head2 run_hooks
@@ -597,7 +680,7 @@ sub run_hooks {
     # run server hooks
     if ( defined( my $hooks_queue_ref = $self->_hooks->{ $name } ) ) {
         foreach my $ref( @$hooks_queue_ref ) {
-            my ( $meth, $meth_attrs_ref ) = @_;
+            my ( $meth, $meth_attrs_ref ) = @$ref;
             eval {
                 my @res = $meth->( $self, $meth_attrs_ref, @$attrs_ref );
                 $attrs_ref = \@res if @res;
@@ -617,6 +700,7 @@ Register hook in hook queue (for server extensions, modules should use the hook 
 
 sub register_hook {
     my ( $self, $name, $method, $attrs_ref ) = @_;
+    $attrs_ref //= [];
     push @{ $self->_hooks->{ $name } ||= [] }, [ $method, $attrs_ref ];
 }
 

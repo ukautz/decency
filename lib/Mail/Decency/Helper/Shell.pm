@@ -45,7 +45,7 @@ sub switch_user_group {
             ? $user_or_uid
             : getpwnam( $user_or_uid )
         ;
-        die "Cannot determine UID for '$user_or_uid'\n"
+        DD::cop_it "Cannot determine UID for '$user_or_uid'\n"
             unless defined $uid;
         $> = $uid;
     }
@@ -57,7 +57,7 @@ sub switch_user_group {
             ? $group_or_gid
             : getgrnam( $group_or_gid )
         ;
-        die "Cannot determine GID for '$group_or_gid'\n"
+        DD::cop_it "Cannot determine GID for '$group_or_gid'\n"
             unless defined $gid;
         $) = $gid;
     }
@@ -77,7 +77,7 @@ sub pid_from_file {
     my ( $file ) = @_;
     return unless -f $file;
     open my $fh, '<', $file
-        or die "Could not open '$file' for read: $!";
+        or DD::cop_it "Could not open '$file' for read: $!";
     my ( $pid ) = <$fh>;
     close $fh;
     chomp $pid;

@@ -11,7 +11,6 @@ use version 0.74; our $VERSION = qv( "v0.2.0" );
 use Data::Dumper;
 use Tie::IxHash;
 use MongoDB 0.35;
-use Carp qw/ croak /;
 use Time::HiRes qw/ usleep ualarm /;
 
 our $EXECUTE_TIMEOUT = 5_000_000;
@@ -367,7 +366,7 @@ sub connect {
     my $connect_timeout = $self->connect_timeout;
     eval {
         local $SIG{ ALRM } = sub {
-            die sprintf( 'Connect timeout after %.2f seconds', $connect_timeout / 1_000_000 ). "\n";
+            DD::cop_it sprintf( 'Connect timeout after %.2f seconds', $connect_timeout / 1_000_000 ). "\n";
         };
         ualarm( $connect_timeout );
         $self->{ db } = MongoDB::Connection->new( %connect )->get_database( $self->database );
@@ -379,7 +378,7 @@ sub connect {
     if ( $@ ) {
         $self->logger
             and $self->logger->error( "Connection to mongodb failed with [$connect_string]: $@" ); 
-        croak "Connection to mongodb failed [$connect_string]: $@";
+        DD::cop_it "Connection to mongodb failed [$connect_string]: $@";
     }
 }
 
@@ -662,7 +661,7 @@ sub safe_transaction {
     my $execute_timeout = $self->execute_timeout;
     eval {
         local $SIG{ ALRM } = sub {
-            die sprintf( 'Process timeout after %.2f seconds', $execute_timeout / 1_000_000 ). "\n";
+            DD::cop_it sprintf( 'Process timeout after %.2f seconds', $execute_timeout / 1_000_000 ). "\n";
         };
         ualarm( $execute_timeout );
         @res = $self->db->get_collection( "${schema}_${table}" )->$method( @$args_ref );
@@ -674,7 +673,7 @@ sub safe_transaction {
     return @res unless $process_error;
     
     # error handlign disabled -> do no force!
-    die $process_error unless $self->transaction_recovery;
+    DD::cop_it $process_error unless $self->transaction_recovery;
     
     # missed reponse -> try aain
     if ( $process_error =~ /missed the response we wanted/ && $counter < 2 ) {
@@ -696,7 +695,7 @@ sub safe_transaction {
         if ( $@ ) {
             undef $self->{ db };
             $self->logger->error( "Could not re-connect to MongoDB: '$@'" );
-            croak "Could not re-connect to MongoDB: '$@'";
+            DD::cop_it "Could not re-connect to MongoDB: '$@'";
         }
         
         $self->logger->info( "Successfully reconnected to MongoDB" );
@@ -710,7 +709,7 @@ sub safe_transaction {
         undef $self->{ db };
         $self->logger
             and $self->logger->error( "Unhandled MongoDB problem after process timeout: '$process_error'" );
-        croak "Unhandled MongoDB problem after process timeout: '$process_error'";
+        DD::cop_it "Unhandled MongoDB problem after process timeout: '$process_error'";
     }
 }
 

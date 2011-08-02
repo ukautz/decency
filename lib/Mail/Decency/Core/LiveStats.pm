@@ -128,7 +128,7 @@ sub update_live_stats {
                 my @periods = map {
                     $_ eq 'total'
                         ? $_
-                        : $dt->strftime( $DATE_FORMATS{ $_ } || die "Dunno period '$_'" )
+                        : $dt->strftime( $DATE_FORMATS{ $_ } || DD::cop_it "Dunno period '$_'" )
                 } @{ $accumulate_ref->{ periods } };
                 
                 

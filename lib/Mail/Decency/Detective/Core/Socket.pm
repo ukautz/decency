@@ -54,7 +54,7 @@ before init => sub {
     while ( ! $self->socket ) {
         if ( $self->config->{ host } ) {
             $self->host( $self->config->{ host } );
-            die ref( $self ).": Require port in config if using host\n"
+            DD::cop_it ref( $self ).": Require port in config if using host\n"
                 unless $self->config->{ port };
             $self->port( $self->config->{ port } );
             
@@ -65,7 +65,7 @@ before init => sub {
                     Debug    => 1,
                     Hello    => 'decency',
                     Timeout  => $self->config->{ timeout } || 30
-                ) or die "Ooops: $address $!\n";
+                ) or DD::cop_it "Ooops: $address $!\n";
                 $self->socket( $smtp );
             }
             else {
@@ -81,17 +81,17 @@ before init => sub {
             $self->path( $self->config->{ path } );
             my $socket = IO::Socket::UNIX->new(
                 Peer     => $self->path,
-            ) or die "Cannot open socket: $!\n";
+            ) or DD::cop_it "Cannot open socket: $!\n";
             $self->socket( $socket );
         }
         else {
-            die ref( $self ). ": Require either host and port OR path\n";
+            DD::cop_it ref( $self ). ": Require either host and port OR path\n";
         }
         last if $max_tries-- <= 0;
         $self->logger->debug0( "Wait for socket" );
         sleep 1;
     }
-    die "Gaving up on waiting for connection\n"
+    DD::cop_it "Gaving up on waiting for connection\n"
         unless $self->socket;
 };
 

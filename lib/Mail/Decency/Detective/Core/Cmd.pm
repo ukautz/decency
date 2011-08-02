@@ -25,7 +25,7 @@ Check command.. normally the command which is used to filter a single mail.
 
 =cut
 
-has cmd_check        => ( is => 'rw', isa => 'Str' );
+has cmd_check => ( is => 'rw', isa => 'Str' );
 
 =head2 cmd_learn_ham : Str
 
@@ -33,7 +33,7 @@ Learn HAM command..
 
 =cut
 
-has cmd_learn_ham    => ( is => 'rw', isa => 'Str', predicate => 'can_learn_ham' );
+has cmd_learn_ham => ( is => 'rw', isa => 'Str', predicate => 'can_learn_ham' );
 
 =head2 cmd_learn_ham : Str
 
@@ -58,7 +58,6 @@ Unlearn wrongly trained SPAM
 =cut
 
 has cmd_unlearn_spam => ( is => 'rw', isa => 'Str', predicate => 'can_learn_spam' );
-
 
 =head1 REQUIRED METHODS
 
@@ -137,7 +136,7 @@ sub cmd_filter {
     
     # if command required user and no user could be determined -> abort
     if ( $cmd =~ /%user%/ && ! $user ) {
-        $self->logger->error( "Could not determine user for recipient ". $self->to. ", abort" );
+        $self->logger->error( "Could not determine user for recipient ". $self->to. ", command line '$cmd'. ABORT!" );
         return ( 0 );
     }
     
@@ -169,7 +168,7 @@ sub cmd_filter {
     else {
         {
             # yeah, zombie mess..
-            local $SIG{ CHLD } = 'ignore';
+            local $SIG{ CHLD } = 'IGNORE';
             open $input_handle, '|-', "$cmd 1>\"$tn\" 2>\"$tn\"";
         };
         $self->add_file_handle( $input_handle );
@@ -194,7 +193,7 @@ sub cmd_filter {
         $self->logger->debug3( "Run command '$cmd_file'" );
         {
             # zombies are creepy
-            local $SIG{ CHLD } = 'ignore';
+            local $SIG{ CHLD } = 'IGNORE';
             `$cmd_file 1>"$tn" 2>"$tn"`;
             $system_result = $?;
         };

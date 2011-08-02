@@ -119,20 +119,20 @@ sub init {
     
     # having sign key
     if ( $self->config->{ sign_key } ) {
-        die "Sign key '". $self->config->{ sign_key }. "' does not exist or not readable\n"
+        DD::cop_it "Sign key '". $self->config->{ sign_key }. "' does not exist or not readable\n"
             unless -f $self->config->{ sign_key };
         $self->sign_key( $self->config->{ sign_key } )
     }
     
     # having sign key dir (domain.tld.key)
     if ( $self->config->{ sign_key_dir } ) {
-        die "Sign key dir '". $self->config->{ sign_key_dir }. "' is not a directory or not readable\n"
+        DD::cop_it "Sign key dir '". $self->config->{ sign_key_dir }. "' is not a directory or not readable\n"
             unless -d $self->config->{ sign_key_dir };
         $self->sign_key_dir( $self->config->{ sign_key_dir } )
     }
     
     # at least one
-    die "Require 'sign_key' and/or 'sign_key_dir'\n"
+    DD::cop_it "Require 'sign_key' and/or 'sign_key_dir'\n"
         unless $self->has_sign_key || $self->has_sign_key_dir;
     
     if ( my $add_headers = $self->config->{ additional_headers } ) {

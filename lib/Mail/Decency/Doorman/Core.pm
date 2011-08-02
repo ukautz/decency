@@ -81,7 +81,7 @@ Has to be overwritten by the module
 
 =cut
 
-sub init { die "'init' method has to be overwritten by ". ref( shift ) }
+sub init { DD::cop_it "'init' method has to be overwritten by ". ref( shift ) }
 
 
 =head2 hostname

@@ -52,7 +52,7 @@ sub create_handler {
             smtp_flush => \&smtp_flush,
             smtp_error => \&smtp_error,
             good_night => \&smtp_stop,
-            _parent    => sub { 0 },
+            #_parent    => sub { 0 },
             # _default        => sub {
             #     my ($event, $args) = @_[ARG0, ARG1];
             #     warn "** SMTP: UNKNOWN EVENT $event, $args\n";
@@ -74,7 +74,7 @@ sub create_handler {
 
 =head2 smtp_start
 
-Start connection from postfix
+Start connection from mail server
 
 =cut
 
@@ -123,17 +123,24 @@ sub smtp_input {
             $heap->{ in_data } = 0;
             
             # handle input data with decency
-            my ( $err, $ok, $reject_message );
+            my ( $err, $ok, $final_state, $reject_message );
             
             foreach my $rcpt_to( @{ $heap->{ rcpt_to } } ) {
                 my ( $th, $tn ) = tempfile( $heap->{ args }->{ temp_mask }, UNLINK => 0 );
                 copy( $heap->{ mime_file }, $tn );
                 
                 eval {
-                    ( $ok, $reject_message ) = $heap->{ decency }->handle_safe( data => {
+                    ( $ok, $reject_message, $final_state ) = $heap->{ decency }->handle_safe( data => {
                         file => $tn,
                         from => $heap->{ mail_from },
                         to   => $rcpt_to,
+                        args => {
+                            doorman_session_data => defined $heap->{ doorman_session_cache }
+                                && defined $heap->{ doorman_session_cache }->{ $rcpt_to }
+                                ? { %{ $heap->{ doorman_session_cache }->{ $rcpt_to } } }
+                                : undef
+                            ,
+                        }
                     } );
                 };
                 $err = $@;
@@ -150,16 +157,26 @@ sub smtp_input {
                 
                 # send bye to client
                 if ( $ok ) {
-                    $heap->{ logger }->debug3( "Send 250 to postfix, mail accepted" );
-                    $heap->{ client }->put( 250 => 'DISCARD' );
+                    $heap->{ logger }->debug3( "Send 250 to mail server, mail accepted" );
+                    $heap->{ client }->put( '250' => 'OK' );
                 }
                 else {
-                    $heap->{ logger }->debug3( "Send 554 to postfix, mail bounced" );
-                    $heap->{ client }->put( 554 => $reject_message || "Rejected" );
+                    
+                    my ( $error_state, $msg )
+                        = $heap->{ decency }->detective_response( $final_state );
+                    
+                    if ( $error_state eq 'discard' ) {
+                        $heap->{ logger }->debug3( "Send 250 to mail server, mail discard" );
+                        $heap->{ client }->put( 250 => "OK" );
+                    }
+                    else {
+                        $heap->{ logger }->debug3( "Send 554 to mail server, mail bounced" );
+                        $heap->{ client }->put( 554 => $msg || "Rejected" );
+                    }
                 }
             }
             
-            # close connection to postfix
+            # close connection to mail server
             unlink $heap->{ mime_file } if -f $heap->{ mime_file };
             delete $heap->{ $_ }
                 for qw/ mail_from rcpt_to mime_fh mime_file /; # client socket
@@ -203,7 +220,6 @@ sub smtp_input {
             
             $heap->{ "client_$_" } = $args{ $_ }
                 for keys %args;
-            print Dumper( { ARGS => \%args } );
         }
         
         # DATA commmand -> init data input
@@ -224,7 +240,7 @@ sub smtp_input {
             # handle with policy (Doorman)
             my ( $ok, $reject_message );
             foreach my $rcpt_to( @{ $heap->{ rcpt_to } } ) {
-                ( $ok, $reject_message ) = $heap->{ decency }->handle_safe( envelope => {
+                ( $ok, $reject_message, my $session_ref ) = $heap->{ decency }->handle_safe( envelope => {
                     rcpt_to => $rcpt_to,
                     map {
                         ( $_ => $heap->{ $_ } )
@@ -232,6 +248,8 @@ sub smtp_input {
                         defined $heap->{ $_ }
                     } qw/ mail_from client_name client_addr client_helo client_ident /
                 } );
+                $heap->{ doorman_session_cache } ||= {};
+                $heap->{ doorman_session_cache }->{ $rcpt_to } = $session_ref;
                 last unless $ok;
             }
             
@@ -267,7 +285,7 @@ sub smtp_input {
             delete $heap->{ $_ } for qw/ mime_file rcpt_to mail_from /; 
         }
         
-        
+        # return result
         smtp_response( $heap, $session, $cmd, $line );
     }
 }
@@ -338,11 +356,11 @@ sub smtp_response {
         }
         when ( "XFORWARD" ) {
             $heap->{ client }->put( 250 => 'OK' );
-            $ENV{ DEBUG_SMTP } && warn "> Got forward '$line'\n";
+            DD::dbg "SMTP-FORWARD> Got forward '$line'";
         }
         default {
-            warn "\n******************\nDo not handle: $cmd\n*******************\n\n";
-            $heap->{ client }->put( 502 => 'This is not your postfix' );
+            DD::dbg "SMTP-OOPS> Do not handle: $cmd";
+            $heap->{ client }->put( 502 => 'This is not your mail server' );
         }
     }
 }

@@ -39,7 +39,7 @@ sub BUILD {
         
         # load class
         eval "use $cache_class";
-        die "Could not load cache module $cache_class: $@\n"
+        DD::cop_it "Could not load cache module $cache_class: $@\n"
             if $@;
         
         # init cache

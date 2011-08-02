@@ -7,7 +7,6 @@ use Data::Dumper;
 use Data::Pager;
 
 use Time::HiRes qw/ usleep ualarm /;
-use Carp qw/ confess /;
 
 use Mail::Decency::Helper::Locker;
 
@@ -139,7 +138,7 @@ sub do_lock {
     $num ||= 0;
     
     my $locker = $self->locker( $name )
-        or die "No locker for '$name' found";
+        or DD::cop_it "No locker for '$name' found";
     
     # !! ATTENTION !!
     #   the purpose of this locking is to ensure increments in multi-forking
@@ -153,7 +152,7 @@ sub do_lock {
     my $deadlock = $timeout;
     eval {
         $SIG{ ALRM } = sub {
-            die "Deadlock timeout in $name after $timeout\n";
+            DD::cop_it "Deadlock timeout in $name after $timeout\n";
         };
         ualarm( $deadlock );
         $locker->lock( $num );
@@ -176,7 +175,7 @@ sub do_unlock {
     my ( $self, $name, $num ) = @_;
     $num ||= 0;
     my $locker = $self->locker( $name )
-        or die "No locker for '$name' found";
+        or DD::cop_it "No locker for '$name' found";
     $locker->unlock( $num );
 }
 

@@ -260,7 +260,7 @@ sub init {
     # having exception databases ? which to use ?
     my $min_ok = 0;
     if ( $self->config->{ exception_databases } ) {
-        die "exception_databases has to be an array\n"
+        DD::cop_it "exception_databases has to be an array\n"
             unless ref( $self->config->{ exception_databases } ) eq 'ARRAY';
         
         # having non empty amount of databases
@@ -270,7 +270,7 @@ sub init {
             foreach my $db( @{ $self->config->{ exception_databases } } ) {
                 
                 # oops, unknwon database name!
-                die "Unknown database '$db' in 'exception_databases' (allowed databases: ". join( ", ", @ALL_DATABASES ). ")\n"
+                DD::cop_it "Unknown database '$db' in 'exception_databases' (allowed databases: ". join( ", ", @ALL_DATABASES ). ")\n"
                     unless $ALLOWED_DATABASES{ $db };
                 
                 # found ok, rememeber
@@ -283,12 +283,12 @@ sub init {
     
     # oops, no having any
     if ( $self->config->{ default_limits } ) {
-        die "default_limits has to be a hash\n"
+        DD::cop_it "default_limits has to be a hash\n"
             unless ref( $self->config->{ default_limits } ) eq 'HASH';
         
         # parse limit config..
         while( my ( $db, $ref ) = each %{ $self->config->{ default_limits } } ) {
-            die "Unknown database '$db' in 'default_limits' (allowed databases: ". join( ", ", @ALL_DATABASES ). ")\n"
+            DD::cop_it "Unknown database '$db' in 'default_limits' (allowed databases: ". join( ", ", @ALL_DATABASES ). ")\n"
                 unless $ALLOWED_DATABASES{ $db };
             
             # remember as used
@@ -306,7 +306,7 @@ sub init {
     }
     
     # min reqs not satisfied
-    die "Min requirements for Throttle: 'default_limits' and/or 'exception_databases'\n"
+    DD::cop_it "Min requirements for Throttle: 'default_limits' and/or 'exception_databases'\n"
         unless $min_ok;
     
     # build up ORDERED list of actual used databases

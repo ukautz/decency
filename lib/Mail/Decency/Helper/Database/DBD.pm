@@ -13,11 +13,12 @@ use Data::Dumper;
 use DBIx::Connector;
 use SQL::Abstract::Limit;
 
-has db         => ( is => "ro", isa => "DBIx::Connector" );
-has sql        => ( is => "ro", isa => "SQL::Abstract" );
-has args       => ( is => "ro", isa => "ArrayRef", required => 1 );
-has quote_char => ( is => 'rw', isa => 'Str', default => q{"} );
+has db          => ( is => "ro", isa => "DBIx::Connector" );
+has sql         => ( is => "ro", isa => "SQL::Abstract" );
+has args        => ( is => "ro", isa => "ArrayRef", required => 1 );
+has quote_char  => ( is => 'rw', isa => 'Str', default => q{"} );
 has create_conf => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
+has db_type     => ( is => 'rw', isa => 'Str', default => 'unknown' );
 
 sub BUILD {
     my ( $self ) = @_;
@@ -31,17 +32,37 @@ sub BUILD {
         # use abstracted api
         $self->{ db } = $dbh;
     };
-    die "Error creating DBD insances: $@\n" if $@;
+    DD::cop_it "Error creating DBD insances: $@\n" if $@;
     
     $self->{ sql } = SQL::Abstract::Limit ->new(
         #quote_char=> $self->quote_char
         limit_dialect => $self->{ db }->dbh
     );
     
-    # quotings
-    if ( $self->args->[0] =~ /^dbi:mysql:/i ) {
+    if ( $self->args->[0] =~ /^dbi:(.+?):/ ) {
+        $self->db_type( lc( $1 ) );
+    }
+    
+    # quotings, create and auto increment
+    
+    #   .. for mysql
+    if ( $self->db_type =~ /^mysql/ ) {
         $self->quote_char( q{`} );
         $self->create_conf->{ tables } = [ 'TYPE=myisam', 'DEFAULT CHARSET=latin1' ];
+        $self->create_conf->{ primary } = 'INTEGER PRIMARY KEY AUTO_INCREMENT';
+    }
+    
+    #   .. for sqlite
+    elsif ( $self->db_type =~ /^sqlite/ ) {
+        $self->create_conf->{ primary } = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    }
+    
+    #   .. for postgresql
+    elsif ( $self->db_type =~ /^(pg|postgres)/ ) {
+        $self->create_conf->{ primary } = 'SERIAL';
+    }
+    else {
+        $self->create_conf->{ primary } = 'INTEGER PRIMARY KEY';
     }
     
     return $self;
@@ -80,7 +101,7 @@ sub search_handle {
     my ( $stm, @bind, $sth );
     eval {
         ( $stm, @bind ) = $self->sql->select(
-            "${schema}_${table}" => [ '*' ],
+            _sql_name( $schema, $table ), => [ '*' ],
             $search_ref,
             $self->update_order( $args_ref->{ order } ) || {},
             $args_ref->{ limit } ||= 0,
@@ -92,7 +113,7 @@ sub search_handle {
     };
     if ( my $db_err = ( $@ || $DBI::errstr ) ) {
         $self->read_unlock  unless $no_lock;
-        die "!! DATABASE ERROR: $db_err  [@bind]!!\n";
+        DD::cop_it "!! DATABASE ERROR: $db_err  [@bind]!!\n";
     }
     
     my @res;
@@ -119,7 +140,7 @@ sub search_read {
     my $sth;
     eval {
         my ( $stm, @bind ) = $self->sql->select(
-            "${schema}_${table}" => [ '*' ],
+            _sql_name( $schema, $table ) => [ '*' ],
             $search_ref,
             $self->update_order( $args_ref->{ order } ) || {},
             $args_ref->{ limit } ||= 0,
@@ -129,7 +150,7 @@ sub search_read {
         $ENV{ PRINT_SQL } && warn "SQL> $stm (@bind)\n";
         $sth->execute( @bind );
     };
-    die "Database error: $DBI::errstr\n" if $DBI::errstr;
+    DD::cop_it "Database error: $DBI::errstr\n" if $DBI::errstr;
     
     return ( $sth, 'fetchrow_hashref' );
 }
@@ -178,7 +199,7 @@ sub set_handle {
     #
     if ( $args_ref->{ update_all } ) {
         ( $stm, @bind )
-            = $self->sql->update( "${schema}_${table}" => $data_ref, $search_ref );
+            = $self->sql->update( _sql_name( $schema, $table ) => $data_ref, $search_ref );
     }
     
     #
@@ -193,14 +214,14 @@ sub set_handle {
         # update ..
         if ( $existing ) {
             ( $stm, @bind )
-                = $self->sql->update( "${schema}_${table}" => $data_ref,
+                = $self->sql->update( _sql_name( $schema, $table ) => $data_ref,
                 $existing, 1 );
         }
         
         # insert ..
         else {
             ( $stm, @bind )
-                = $self->sql->insert( "${schema}_${table}" => { %$search_ref, %$data_ref } );
+                = $self->sql->insert( _sql_name( $schema, $table ) => { %$search_ref, %$data_ref } );
         }
     }
     
@@ -213,7 +234,7 @@ sub set_handle {
     };
     if ( $@ || $DBI::errstr ) {
         $self->write_unlock; # release semaphore
-        die "!! DATABASE ERROR ($stm): $DBI::errstr  [". join( ", ", @bind ). "]!!\n";
+        DD::cop_it "!! DATABASE ERROR ($stm): $DBI::errstr  [". join( ", ", @bind ). "]!!\n";
     }
     
     $self->write_unlock; # release semaphore
@@ -234,7 +255,7 @@ sub count {
     my $count = 0;
     eval {
         my ( $stm, @bind ) = $self->sql->select(
-            "${schema}_${table}" => [ 'COUNT( * )' ],
+            _sql_name( $schema, $table ) => [ 'COUNT( * )' ],
             $search_ref
         );
         my $sth = $self->db->dbh->prepare_cached( $stm );
@@ -244,7 +265,7 @@ sub count {
         ( $count ) = $sth->fetchrow_array();
     };
     
-    die "Database error: $DBI::errstr\n" if $DBI::errstr;
+    DD::cop_it "Database error: $DBI::errstr\n" if $DBI::errstr;
     
     return $count;
 }
@@ -307,7 +328,7 @@ sub distinct {
     my $sth;
     
     my ( $stm, @bind ) = $self->sql->select(
-        "${schema}_${table}" => [ 'DISTINCT( '. quotemeta( $key ). ' )' ],
+        _sql_name( $schema, $table ) => [ 'DISTINCT( '. quotemeta( $key ). ' )' ],
         $search_ref,
     );
     $sth = $self->db->dbh->prepare_cached( $stm );
@@ -320,7 +341,7 @@ sub distinct {
     
     if ( $@ || $DBI::errstr ) {
         $self->read_unlock; # release semaphore
-        die "!! DATABASE ERROR: $DBI::errstr [@bind]!!\n";
+        DD::cop_it "!! DATABASE ERROR: $DBI::errstr [@bind]!!\n";
     }
     
     my @res = map { $_->[0] } @{ $sth->fetchall_arrayref() };
@@ -344,14 +365,14 @@ sub remove_handle {
     $self->write_lock; # accquire semaphore
     
     eval {
-        my ( $stm, @bind ) = $self->sql->delete( "${schema}_${table}" => $search_ref );
+        my ( $stm, @bind ) = $self->sql->delete( _sql_name( $schema, $table ) => $search_ref );
         my $sth = $self->db->dbh->prepare( $stm );
         $ENV{ PRINT_SQL } && warn "SQL> $stm (@bind)\n";
         $sth->execute( @bind );
     };
     if ( $@ || $DBI::errstr ) {
         $self->write_unlock; # release semaphore
-        die "Error in remove: $DBI::errstr\n"; 
+        DD::cop_it "Error in remove: $DBI::errstr\n"; 
     };
     
     $self->write_unlock; # release semaphore
@@ -369,7 +390,7 @@ Check wheter schema/table exists
 sub ping_handle {
     my ( $self, $schema, $table ) = @_;
     
-    my ( $stm, @bind ) = $self->sql->select( "${schema}_${table}" => [ 'COUNT( id )' ] );
+    my ( $stm, @bind ) = $self->sql->select( _sql_name( $schema, $table ) => [ 'COUNT( id )' ] );
     $self->db->dbh->{ PrintError } = 0;
     
     eval {
@@ -406,7 +427,7 @@ sub setup_handle {
                 foreach my $idx_ref( @index ) {
                     my $idx = join( "_", @$idx_ref );
                     push @indices, [
-                        "${schema}_${table}_${idx} ON ${schema}_${table}",
+                        _sql_name( $schema, $table, $idx ). ' ON '. _sql_name( $schema, $table ),
                         $idx_ref
                     ];
                 }
@@ -414,7 +435,7 @@ sub setup_handle {
             else {
                 my $idx = join( "_", @index );
                 push @indices, [
-                    "${schema}_${table}_${idx} ON ${schema}_${table}",
+                    _sql_name( $schema, $table, $idx ). ' ON '. _sql_name( $schema, $table ),
                     \@index
                 ];
             }
@@ -422,7 +443,7 @@ sub setup_handle {
         elsif ( $name eq '-unique' ) {
             my $idx = join( "_", @{ $columns_ref->{ -unique } } );
             push @uniques, [
-                "${schema}_${table}_${idx} ON ${schema}_${table}",
+                _sql_name( $schema, $table, $idx ). ' ON '. _sql_name( $schema, $table ),
                 $columns_ref->{ -unique }
             ];
         }
@@ -441,13 +462,13 @@ sub setup_handle {
             push @columns, "$name $type";
         }
     }
-    push @columns, "id INTEGER PRIMARY KEY";
+    push @columns, 'id '. $self->create_conf->{ primary };
     
     my @stm;
     
     push @stm, do {
         my $sql = scalar $self->sql->generate(
-            'create table', "${schema}_${table}" => \@columns );
+            'create table', _sql_name( $schema, $table ) => \@columns );
         $sql .= join( ' ', @{ $self->create_conf->{ tables } } )
             if defined $self->create_conf->{ tables };
         $sql;
@@ -467,7 +488,7 @@ sub setup_handle {
     
     unless ( $execute ) {
         print join( "\n",
-            "-- TABLE: ${schema}_${table} (SQLITE):",
+            "-- TABLE: ". _sql_name( $schema, $table ). " (SQLITE):",
             join( ";\n", @stm ),
         ). ";\n";
         return 0;
@@ -475,11 +496,11 @@ sub setup_handle {
     else {
         foreach my $stm( @stm ) {
             eval {
-                $ENV{ PRINT_SQL } && warn "SQL> $stm\n";
+                DD::dbg "SQL> $stm";
                 $self->db->dbh->do( "$stm;" );
             };
             if ( $@ || $DBI::errstr ) {
-                die "DBD Error ($stm): $DBI::errstr / $@";
+                DD::cop_it "DBD Error ($stm): $DBI::errstr / $@";
             }
         }
         return 1;
@@ -585,6 +606,10 @@ sub update_order {
     }
     
     return \@order;
+}
+
+sub _sql_name {
+    return join( '_', map { uc( $_ ) } @_ );
 }
 
 

@@ -208,7 +208,7 @@ sub _custom_scoring_check_file {
     my $res = -1;
     eval {
         open $fh, '<', $self->custom_scoring_file
-            or die "Cannot open '". $self->custom_scoring_file. "' for read: $!";
+            or DD::cop_it "Cannot open '". $self->custom_scoring_file. "' for read: $!";
         CHECK_FILE:
         while( my $l = <$fh> ) {
             chomp $l;
@@ -223,7 +223,7 @@ sub _custom_scoring_check_file {
     };
     my $err = $@;
     close $fh if $fh;
-    die $err if $err;
+    DD::cop_it $err if $err;
     
     return ( $res, $name );
 }

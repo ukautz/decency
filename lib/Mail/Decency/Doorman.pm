@@ -21,6 +21,7 @@ use Data::Dumper;
 use Scalar::Util qw/ weaken blessed /;
 use Time::HiRes qw/ tv_interval gettimeofday /;
 
+use Mail::Decency::Helper::Debug;
 use Mail::Decency::Helper::IP qw/ is_local_host /;
 use Mail::Decency::Core::POEForking::Postfix;
 use Mail::Decency::Core::Exception;
@@ -169,13 +170,13 @@ has forward_sign_key  => ( is => 'rw', isa => 'Str', predicate => 'has_forward_s
     # check file
     $key_file = $self->config_dir . "/$key_file"
         if $self->has_config_dir && ! -f $key_file;
-    die "Could not access doorman_sign_pub key file '$key_file'".
+    DD::cop_it "Could not access doorman_sign_pub key file '$key_file'".
         ( $self->has_config_dir ? ' (config dir: '. $self->config_dir. ')' : '' ). "\n"
         unless -f $key_file;
     
     # read key
     open my $fh, '<', $key_file
-        or die "Cannot open doorman_sign_pub key file for read: $!\n";
+        or DD::cop_it "Cannot open doorman_sign_pub key file for read: $!\n";
     my $key_content = join( "", <$fh> );
     close $fh;
     
@@ -187,7 +188,7 @@ has forward_sign_key  => ( is => 'rw', isa => 'Str', predicate => 'has_forward_s
     
     # failure in loading -> bye
     else {
-        die "Could not load Crypt::OpenSSL::RSA, cannot sign headers! Error: $@\n";
+        DD::cop_it "Could not load Crypt::OpenSSL::RSA, cannot sign headers! Error: $@\n";
     }
     
     return;
@@ -306,7 +307,10 @@ Returns subref to handlers, called by L<Mail::Decency::Core::POEForking::Postfix
 =cut
 
 sub handle_safe {
-    my ( $self, $attrs_ref ) = @_;
+    my ( $self, $attrs_ref, $args_ref ) = @_;
+    $args_ref ||= {
+        return_session_data => 0
+    };
     
     # don bother with loopback addresses
     return {
@@ -369,12 +373,19 @@ sub handle_safe {
     };
     $self->logger->error( "Error in reporting: $@" ) if $@;
     
+    # get session data, if required
+    my %session_data = $args_ref->{ return_session_data }
+        ? ( session_data => $self->session->for_cache )
+        : ();
+    ;
+    
     # clear info and stash to cache
     my $response = $self->session_cleanup();
     
     # return final answer (REJECT, OK, DUNNO, 4xx, 5xx, ..) inclusive message
     return {
-        action => $response
+        action => $response,
+        %session_data
     };
 }
 

@@ -31,7 +31,6 @@ use Digest::SHA qw/ sha256_hex /;
 use constant {
     LDAP_REAL_PRECISION => 10_000
 };
-use Carp qw/ confess /;
 
 =head1 ATTRIBUTES
 
@@ -84,7 +83,7 @@ Either ldap, ldaps or ldapi. Default: ldap
 
 has scheme => ( is => 'ro', isa => 'Str', default => 'ldap', trigger => sub {
     my ( $self, $scheme ) = @_;
-    die ref($self). "->scheme: has to be in 'ldap', 'ldaps', 'ldapi' but is '$scheme'"
+    DD::cop_it ref($self). "->scheme: has to be in 'ldap', 'ldaps', 'ldapi' but is '$scheme'"
         unless $scheme =~ /^ldap[si]?$/;
 } );
 
@@ -145,7 +144,7 @@ sub BUILD {
             $self->db->bind( $self->user, password => $self->password )
         };
         if ( $@ ) {
-            die "Could not connect to LDAP: $@\n";
+            DD::cop_it "Could not connect to LDAP: $@\n";
         }
     }
     
@@ -335,7 +334,7 @@ sub set_handle {
             };
             if ( $@ ) {
                 $self->logger->error( "Failed set_handle (create) for $schema / $table / $unique: $@" );
-                die "Failed set_handle (create) for $schema / $table / $unique: $@\n";
+                DD::cop_it "Failed set_handle (create) for $schema / $table / $unique: $@\n";
             }
         }
         
@@ -347,7 +346,7 @@ sub set_handle {
             };
             if ( $@ ) {
                 $self->logger->error( "Failed set_handle (upgrade) for $schema / $table / $existing->{ cn }: $@" );
-                die "Failed set_handle (upgrade) for $schema / $table, $existing->{ cn }: $@\n";
+                DD::cop_it "Failed set_handle (upgrade) for $schema / $table, $existing->{ cn }: $@\n";
             }
         }
     }
@@ -430,7 +429,7 @@ sub increment {
         };
         if ( $@ ) {
             $self->logger->error( "Failed increment (upgrade) for $schema / $table: $@" );
-            die "Failed increment (upgrade) for $schema / $table: $@\n";
+            DD::cop_it "Failed increment (upgrade) for $schema / $table: $@\n";
         }
     }
     
@@ -441,7 +440,7 @@ sub increment {
         };
         if ( $@ ) {
             $self->logger->error( "Failed increment (create) for $schema / $table: $@" );
-            die "Failed increment (create) for $schema / $table: $@\n";
+            DD::cop_it "Failed increment (create) for $schema / $table: $@\n";
         }
     }
     
@@ -502,7 +501,7 @@ sub _extract_unique {
     my ( $self, $schema, $table, @refs ) = @_;
     
     my @unique_keys = $self->unique_keys( $schema, $table );
-    die "Cannot create new row in $schema / $table, cause have no unique keys!\n"
+    DD::cop_it "Cannot create new row in $schema / $table, cause have no unique keys!\n"
         unless @unique_keys;
     my %unique = ();
     
@@ -516,7 +515,7 @@ sub _extract_unique {
                 next EACH_UNIQUE;
             }
         }
-        confess "Require unique key part '$unique' either in search or data for $schema / $table, means one of '". join( ", ", @unique_keys ). "' but got only '". join( ", ", keys %seen_key ). "'\n";
+        DD::cop_it "Require unique key part '$unique' either in search or data for $schema / $table, means one of '". join( ", ", @unique_keys ). "' but got only '". join( ", ", keys %seen_key ). "'\n";
     }
     my $unique = sha256_hex( join( '#', map {
         sprintf( '%s=%s', $_, $unique{ $_ } )
@@ -773,7 +772,7 @@ sub setup_handle {
     my @errors = $self->_check_ldap_schema( $schema, $table, $columns_ref );
     if ( @errors ) {
         $self->logger->error( "LDAP Schema incorrect: ". join( " / ", @errors ) );
-        die "LDAP Schema incorrect: ". join( " / ", @errors ). "\n";
+        DD::cop_it "LDAP Schema incorrect: ". join( " / ", @errors ). "\n";
     }
     
     foreach my $ref(
@@ -799,7 +798,7 @@ sub setup_handle {
                 eval { $self->db->add( $base, attrs => [ %$attrs_ref ] ) };
                 if ( $@ ) {
                     $self->logger->error( "Failed to setup $schema / $table ($base): $@" );
-                    die "Failed to setup $schema / $table ($base): $@\n";
+                    DD::cop_it "Failed to setup $schema / $table ($base): $@\n";
                 }
             }
         }

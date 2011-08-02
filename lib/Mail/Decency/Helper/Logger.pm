@@ -111,7 +111,7 @@ sub BUILD {
     if ( $self->directory ) {
         mkpath( $self->directory, { mode => 0700 } )
             unless -d $self->directory;
-        die "Could not create log directory '". $self->directory. "'\n"
+        DD::cop_it "Could not create log directory '". $self->directory. "'\n"
             unless -d $self->directory;
         
         my $log_sub = sub {
@@ -123,12 +123,12 @@ sub BUILD {
                 eval { close $fh if $fh; };
                 my $mode = -f $file ? ">>" : ">";
                 open $fh, $mode, $file
-                    or carp "Cannot open '$file' for write/append: $!";
+                    or DD::cop_it "Cannot open '$file' for write/append: $!";
                 $self->_log_file_handles->{ $file } = $fh;
                 $self->_log_file_inodes->{ $file } = $inode;
             }
             print $fh "[$$/". localtime(). "/". lc($self->prefix). "/$str_log_level$msg_id]: $msg\n"
-                or carp "Failed print to '$file': $!";
+                or DD::cop_it "Failed print to '$file': $!";
         };
         
         my $dir = $self->directory;

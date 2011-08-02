@@ -26,6 +26,8 @@ use version 0.74; our $VERSION = qv( "v0.2.0" );
 use YAML;
 use Getopt::Long;
 use File::Basename qw/ dirname /;
+
+use Mail::Decency::Helper::Debug;
 use Mail::Decency::Helper::Shell qw/
     switch_user_group
     pid_is_running
@@ -45,6 +47,7 @@ my %opt;
 GetOptions(
     "class|a=s"            => \( $opt{ class } = "" ),
     "config|c=s"           => \( $opt{ config } = '/etc/decency/%s.yml' ),
+    "mode|m=s"             => \( $opt{ mode } = "" ),
     "log-level|l=i"        => \( $opt{ log_level } = 1 ),
     "pid-file|p=s"         => \( $opt{ pid } = "" ),
     "port=i"               => \( $opt{ port } ),
@@ -84,6 +87,10 @@ Usage: $0 --class <classname> --config <configfile> --pidfile <pidfile>
     --config | -c <file>
         Path to config .. 
         default: /etc/decency/<class>.yml
+    
+    --mode | -m <prequeue|milter> [*only defender]
+        for Defender server: either prequeue (for Posfix before-queue)
+        or milter interface
     
     --pid-file | -p <file>
         default: /tmp/<class>.pid

@@ -217,7 +217,7 @@ sub init {
     }
     
     # check ...
-    die "Do not use weight_unknown_reverse_client_hostname AND weight_unknown_client_hostname.. only one of those\n"
+    DD::cop_it "Do not use weight_unknown_reverse_client_hostname AND weight_unknown_client_hostname.. only one of those\n"
         if $self->weight_unknown_reverse_client_hostname && $self->weight_unknown_client_hostname;
     
 }
@@ -254,12 +254,12 @@ sub handle {
         [
             $self->weight_non_fqdn_helo_hostname,
             'user@'. $self->helo,
-            "Helo hostname is not in FQDN",
+            sprintf( 'Helo hostname %s is not in FQDN', $self->helo ),
         ],
         [
             $self->weight_non_fqdn_recipient,
             $self->to,
-            "Recipient address is not in FQDN",
+            sprintf( 'Recipient address %s is not in FQDN', $self->to ),
         ]
     );
     
@@ -267,7 +267,7 @@ sub handle {
     push @fqdn_checks, [
         $self->weight_non_fqdn_sender,
         $self->from,
-        "Sender address is not in FQDN",
+        sprintf( 'Sender address %s is not in FQDN', $self->from ),
     ] if $self->from;
     
     foreach my $ref( @fqdn_checks ) {

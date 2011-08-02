@@ -9,7 +9,6 @@ use Archive::Tar qw/ COMPRESS_GZIP /;
 use File::Temp qw/ tempfile /;
 use IO::File;
 use IO::YAML;
-use Carp qw/ croak confess /;
 
 =head1 NAME
 
@@ -50,7 +49,7 @@ sub export_database {
     # remove existing file
     unless ( $stdout ) {
         unlink $export_file if -f $export_file;
-        croak "Cannot remove export file '$export_file'"
+        DD::cop_it "Cannot remove export file '$export_file'"
             if -f $export_file;
     
         # create new tar
@@ -75,7 +74,7 @@ sub export_database {
                 }
                 
                 my $io = IO::YAML->new( $th )
-                    or croak "Cannot file handle with YAML: $!";
+                    or DD::cop_it "Cannot file handle with YAML: $!";
                 $io->auto_terminate( 1 );
                 
                 # get columns
@@ -99,7 +98,7 @@ sub export_database {
                     
                     # print yaml ..
                     print $io $data_ref
-                        or confess "Could not print to YAML filehandle: $!";
+                        or DD::cop_it "Could not print to YAML filehandle: $!";
                     
                     $count++;
                 }
@@ -141,7 +140,7 @@ sub import_database {
     
     # open tar file
     my $tar = Archive::Tar->new( $import_file, COMPRESS_GZIP )
-        or croak "Cannot open import file '$import_file' for read: $!\n";
+        or DD::cop_it "Cannot open import file '$import_file' for read: $!\n";
     
     # go throgh all modules
     foreach my $module( @{ $self->childs } ) {
@@ -168,7 +167,7 @@ sub import_database {
                 eval {
                     $io = IO::YAML->new( $th );
                 };
-                croak "Errro: $@" if $@;
+                DD::cop_it "Errro: $@" if $@;
                 $io->auto_load( 1 );
                 
                 $| = 1;

@@ -6,7 +6,6 @@ with qw/ Mail::Decency::Core::Meta /;
 use version 0.74; our $VERSION = qv( "v0.2.0" );
 use File::Temp qw/ tempfile /;
 use Scalar::Util qw/ weaken refaddr /;
-use Carp qw/ confess /;
 use overload '""' => \&get_name;
 
 =head1 NAME
@@ -79,6 +78,18 @@ has file_handles => (
     default   => sub { {} }
 );
 
+=head2 timeout_child_kill_signal
+
+SIGNAL used to kill timeout-ted processes (not the forked servers, but all processes started by a module) if the modules timeouts. Set to the INT value of the SIG (eg SIGKILL = 9, SIGHUP = 1) or the string value ( eg "USR1" for SIGUSR1 and so on). Use "man kill" to see all the signals.
+
+Set to 0 to disable.
+
+Default: 9 (SIGKILL)
+
+=cut
+
+has timeout_child_kill_signal => ( is => 'rw', isa => 'Str', default => 'KILL' );
+
 
 
 =head1 REQUIRED METHODS
@@ -140,7 +151,7 @@ sub get_handlers {
     my ( $self ) = @_;
     
     # check wheter having config!
-    die "No config has been set\n"
+    DD::cop_it "No config has been set\n"
         unless $self->has_config;
     
     weaken( my $self_weak = $self );
@@ -189,7 +200,7 @@ sub clear_file_handles {
         $self->close_file( $fh, 1 );
         unlink( $fn ) if $fn && ! $keep && -f $fn;
     }
-    die join( " / ", @errors ) if @errors;
+    DD::cop_it join( " / ", @errors ) if @errors;
     return ;
 }
 
@@ -232,7 +243,7 @@ sub open_file {
     my ( $self, $mode, $file, $msg ) = @_;
     $msg ||= "Failed to open file '$file' (mode '$mode', module: '$self'):";
     open my $fh, $mode, $file
-        or die "$msg $@";
+        or DD::cop_it "$msg $@";
     $self->add_file_handle( [ $fh, $file ] );
     return $fh;
 }
@@ -253,7 +264,7 @@ sub close_file {
         }
         else {
             close $fh
-                or die "Could not close file handle $addr". ( $file ? " ($file)" : "" ). ": $!";
+                or DD::cop_it "Could not close file handle $addr". ( $file ? " ($file)" : "" ). ": $!";
         }
     }
     return ;
@@ -319,7 +330,7 @@ sub database {
 sub __get_temp_file {
     my ( $self, $temp_dir, $format, @args ) = @_;
     $temp_dir ||= $self->server->temp_dir if $self->server->can( 'temp_dir' );
-    die "Require temp dir for get_temp_file"
+    DD::cop_it "Require temp dir for get_temp_file"
         unless $temp_dir;
     $format ||= "file-XXXXXX";
     return tempfile( "$temp_dir/$format", UNLINK => 0, @args );

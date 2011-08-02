@@ -55,6 +55,11 @@ sub merged_config {
     $config->{ server }->{ host } = $opt_ref->{ host }
         if $opt_ref->{ host };
     
+    # having mode (Defender)
+    $config->{ mode } = $opt_ref->{ mode }
+        if $opt_ref->{ mode };
+    
+    
     return $config;
 }
 

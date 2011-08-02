@@ -166,7 +166,7 @@ sub init {
     
     # got versions ?
     if ( defined $self->config->{ versions } ) {
-        die "versions has to be an arrayref of integers (1, 2 so far)\n"
+        DD::cop_it "versions has to be an arrayref of integers (1, 2 so far)\n"
             unless ref( $self->config->{ versions } ) eq 'ARRAY'
             && scalar grep { /^\d+$/ } @{ $self->config->{ versions } };
         $self->versions( $self->config->{ versions } );

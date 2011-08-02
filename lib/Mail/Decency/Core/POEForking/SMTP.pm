@@ -73,7 +73,7 @@ sub create_handler {
 
 =head2 smtp_start
 
-Start connection from postfix
+Start connection from mail server
 
 =cut
 
@@ -146,16 +146,16 @@ sub smtp_input {
                 
                 # send bye to client
                 if ( $ok ) {
-                    $heap->{ logger }->debug3( "Send 250 to postfix, mail accepted" );
+                    $heap->{ logger }->debug3( "Send 250 to mail server, mail accepted" );
                     $heap->{ client }->put( 250 => 'Bye ' );
                 }
                 else {
-                    $heap->{ logger }->debug3( "Send 554 to postfix, mail bounced" );
+                    $heap->{ logger }->debug3( "Send 554 to mail server, mail bounced" );
                     $heap->{ client }->put( 554 => $reject_message || "Rejected" );
                 }
             }
             
-            # close connection to postfix
+            # close connection to mail server
             delete $heap->{ $_ }
                 for qw/ mail_from rcpt_to mime_fh mime_file /; # client socket
             
@@ -283,11 +283,11 @@ sub smtp_response {
         }
         when ( "XFORWARD" ) {
             $heap->{ client }->put( 250 => 'Nice, gimme more' );
-            $ENV{ DEBUG_SMTP } && warn "> Got forward '$line'\n";
+            DD::dbg "SMTP-FORWARD> Got forward '$line'";
             $heap->{ finished } ++;
         }
         default {
-            $heap->{ client }->put( 502 => 'This is not your postfix' );
+            $heap->{ client }->put( 502 => 'This is not your mail server' );
         }
     }
 }

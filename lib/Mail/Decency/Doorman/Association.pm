@@ -189,12 +189,12 @@ sub init {
     my ( $self ) = @_;
     
     if ( defined $self->config->{ weight_range_hit } ) {
-        die "Association: weight_range_hit has to be a HashRef\n"
+        DD::cop_it "Association: weight_range_hit has to be a HashRef\n"
             unless ref( $self->config->{ weight_range_hit } ) eq 'HASH';
         while ( my ( $k, $v ) = each %{ $self->config->{ weight_range_hit } } ) {
-            die "Association: weight_range_hit key '$k' is not an integer\n"
+            DD::cop_it "Association: weight_range_hit key '$k' is not an integer\n"
                 unless $k =~ /^\d+$/;
-            die "Association: weight_range_hit value '$v' for key '$k' is not an integer\n"
+            DD::cop_it "Association: weight_range_hit value '$v' for key '$k' is not an integer\n"
                 unless $v =~ /^\d+$/;
         }
     }

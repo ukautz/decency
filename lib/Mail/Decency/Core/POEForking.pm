@@ -10,6 +10,7 @@ use Time::HiRes qw/ usleep /;
 use Proc::ProcessTable;
 use POE::Wheel::ReadWrite;
 #use POE::API::Peek;
+use Data::Dumper;
 
 use base qw/
     Exporter
@@ -56,7 +57,12 @@ sub new {
     weaken( my $decency_weak = $decency );
     POE::Session->create(
         inline_states => {
-            _start             => \&forking_startup,
+            _start             => sub {
+                if ( $args_ref->{ callback_start } ) {
+                    $args_ref->{ callback_start }->( $decency_weak, @_ );
+                }
+                &forking_startup( @_ );
+            },
             _stop              => \&forking_halt,
             fork_child         => \&forking_fork_child,
             catch_sig_int      => \&forking_catch_sig_int,
@@ -176,7 +182,7 @@ sub forking_fork_child {
     
     # main fork loop
     my $max = $heap->{ conf }->{ server }->{ instances } || 3;
-    die "Require at least 1 child, got '$max'"
+    DD::cop_it "Require at least 1 child, got '$max'"
         if $max < 1;
     
     # start the childs
@@ -198,6 +204,7 @@ sub forking_fork_child {
             # add new child
             $heap->{ decency }->logger->debug3( "Add new child $pid to list" );
             $heap->{ childs }->{ $pid } ++;
+            $heap->{ decency }->add_child_pid( $pid => scalar time() );
             
             # bind sig child to handler (if child dies -> this will be called)
             $kernel->sig_child( $pid, "catch_sig_child" );
@@ -243,60 +250,64 @@ sub forking_catch_sig_int {
     delete $heap->{ server };
     
     # close all client session
-    if ( defined $heap->{ client_sessions } ) {
+    unless ( $heap->{ is_child } ) {
+        kill TERM => $_ for keys %{ $heap->{ childs } };
         $kernel->post( $_, 'good_night' )
             for values %{ $heap->{ client_sessions } };
         delete $heap->{ client_sessions };
-    }
-    
-    # close all childs (only for parent, if not already called
-    unless ( $heap->{ is_going_down } || $heap->{ is_child } ) {
         
-        # mark shutdown
-        $heap->{ is_going_down } = 1;
-        
-        my $sub_running = sub {
-            my $pid = shift;
-            my $t = Proc::ProcessTable->new;
-            use Data::Dumper;
-            return scalar ( grep { $_->pid == $pid && $_->state ne 'defunct' } @{ $t->table } ) > 0;
-        };
-        
-        # all child pids ..
-        foreach my $child_pid( keys %{ $heap->{ childs } } ) {
-            eval {
-                
-                # wait for 3 seconds for child to go down..
-                local $SIG{ ALRM } = sub {
-                    die "Timeout in killing\n";
-                };
-                alarm( 5 );
-                my $running = $sub_running->( $child_pid );
-                $ENV{ DECENCY_DEBUG_CHILD_SHUTDOWN } && print "Found running $child_pid: $running\n";
-                kill "INT", $child_pid;
-                
-                # do the wait ..
-                $ENV{ DECENCY_DEBUG_CHILD_SHUTDOWN } && print "Shutting down $child_pid: ";
-                #while ( my $ok = kill 0, $child_pid ) {
-                while( my $up = $sub_running->( $child_pid ) ) {
-                    $ENV{ DECENCY_DEBUG_CHILD_SHUTDOWN } && print "$up"; 
-                    usleep( 100_000 );
-                }
-                $ENV{ DECENCY_DEBUG_CHILD_SHUTDOWN } && print " OK\n"; 
-                
-                # hsa been killed ..
-                alarm( 0 );
+        # close all childs (only for parent, if not already called
+        unless ( $heap->{ is_going_down } ) {
+            
+            # mark shutdown
+            $heap->{ is_going_down } = 1;
+            
+            my $sub_running = sub {
+                my $pid = shift;
+                my $t = Proc::ProcessTable->new;
+                return scalar ( grep { $_->pid == $pid && $_->state ne 'defunct' } @{ $t->table } ) > 0;
             };
             
-            # not killed ? try harder!
-            if ( $@ ) {
-                #warn ">> E $@\n";
-                my $running = kill 0, $child_pid;
-                $ENV{ DECENCY_DEBUG_CHILD_SHUTDOWN } && print " FAILED ($running) -> kill hard\n";
-                kill "KILL", $child_pid;
+            # all child pids ..
+            foreach my $child_pid( keys %{ $heap->{ childs } } ) {
+                eval {
+                    
+                    # wait for 3 seconds for child to go down..
+                    local $SIG{ ALRM } = sub {
+                        DD::cop_it "Timeout in killing\n";
+                    };
+                    alarm( 5 );
+                    my $running = $sub_running->( $child_pid );
+                    DD::dbg "Found running $child_pid: $running\n";
+                    kill "INT", $child_pid;
+                    
+                    # do the wait ..
+                    DD::dbg "Shutting down $child_pid: ";
+                    #while ( my $ok = kill 0, $child_pid ) {
+                    while( my $up = $sub_running->( $child_pid ) ) {
+                        DD::dbg " * Up $child_pid"; 
+                        usleep( 100_000 );
+                    }
+                    DD::dbg " OK, $child_pid is shut down"; 
+                    
+                    # hsa been killed ..
+                    alarm( 0 );
+                };
+                
+                # not killed ? try harder!
+                if ( $@ ) {
+                    #warn ">> E $@\n";
+                    my $running = kill 0, $child_pid;
+                    DD::dbg " FAILED ($running, $child_pid) -> kill hard\n";
+                    kill KILL => $child_pid;
+                }
             }
+            
         }
-        
+    }
+    
+    else {
+        delete $heap->{ decency };
     }
     
     # say good night
@@ -304,7 +315,7 @@ sub forking_catch_sig_int {
 }
 
 
-=head2 forking_catch_sig_int
+=head2 forking_catch_sig_term
 
 Catch the death of the master process
 
@@ -313,7 +324,8 @@ Catch the death of the master process
 sub forking_catch_sig_term {
     my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
     
-    $heap->{ decency }->logger->debug3( "Caught SIG Term ($$)" );
+    $heap->{ decency }->logger->debug3( "Caught SIG Term ($$) in ". ( $heap->{ is_child } ? "child instance" : "parent server" ) );
+    
     forking_catch_sig_int( @_ );
 }
 
@@ -327,6 +339,10 @@ Catch the death of a child .. sad as it might be
 
 sub forking_catch_sig_child {
     my ( $kernel, $heap, $child_pid ) = @_[ KERNEL, HEAP, ARG1 ];
+    
+    # assure child pid is removed
+    $heap->{ decency }->remove_child_pid( $child_pid )
+        unless $heap->{ decency }->is_child;
     
     # if there is NO such child -> return
     return unless delete $heap->{ childs }->{ $child_pid };
@@ -349,7 +365,6 @@ sub forking_catch_reload {
     
     if ( $heap->{ decency }->is_child ) {
         $heap->{ decency }->reload();
-        
     }
     else {
         foreach my $child_pid( keys %{ $heap->{ childs } } ) {

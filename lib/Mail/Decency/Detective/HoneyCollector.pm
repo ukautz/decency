@@ -72,7 +72,7 @@ sub init {
     if ( $self->config->{ archive_dir } ) {
         mkpath( $self->config->{ archive_dir }, { mode => 0700 } )
             unless -d $self->config->{ archive_dir };
-        die "HoneyCollector: Could not create archive_dir '". $self->config->{ archive_dir }. "'\n"
+        DD::cop_it "HoneyCollector: Could not create archive_dir '". $self->config->{ archive_dir }. "'\n"
             unless -d $self->config->{ archive_dir };
         $self->archive_dir( $self->config->{ archive_dir } );
     }
@@ -82,7 +82,7 @@ sub init {
         if $self->config->{ train };
     
     # min required
-    die "HoneyCollector: Activate at least one of train or archive_dir\n"
+    DD::cop_it "HoneyCollector: Activate at least one of train or archive_dir\n"
         unless $self->train || $self->do_collect;
     
     $self->logger->debug0( "Train spam mails: ". ( $self->train ? "enabled" : "disabled" ) );

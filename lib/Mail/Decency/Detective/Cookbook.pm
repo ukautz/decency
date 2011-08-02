@@ -51,7 +51,7 @@ YAML Configuration
         $self->add_config_params( qw/ some_easy_param / );
         
         # check
-        die "some_key has to contain 'some'"
+        DD::cop_it "some_key has to contain 'some'"
             unless ( $self->config->{ some_key } || "" ) =~ /some/;
         # set value
         $self->some_key( $self->config->{ some_key } );

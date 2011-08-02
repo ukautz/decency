@@ -58,7 +58,7 @@ sub init {
     my ( $self ) = @_;
     
     if ( $self->config->{ host } ) {
-        die ref( $self ).": Require port in config if using host\n"
+        DD::cop_it ref( $self ).": Require port in config if using host\n"
             unless $self->config->{ port };
         $self->clamav( ClamAV::Client->new(
             socket_host => $self->config->{ host },
@@ -71,7 +71,7 @@ sub init {
         ) );
     }
     else {
-        die ref( $self ). ": Require either host and port OR path\n";
+        DD::cop_it ref( $self ). ": Require either host and port OR path\n";
     }
     $self->logger->info( "Cannot ping clamav .. you should enable it" )
         unless $self->clamav->ping;

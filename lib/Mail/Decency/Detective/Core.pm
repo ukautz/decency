@@ -123,7 +123,7 @@ sub exec_handle {
 
 =cut
 
-sub init { die "'init' method has to be overwritten by ". ref( shift ) }
+sub init { DD::cop_it "'init' method has to be overwritten by ". ref( shift ) }
 
 =head1 AUTHOR
 

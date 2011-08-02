@@ -90,7 +90,7 @@ Incoming data from postfix
 
 sub postfix_input {
     my ( $heap, $attr ) = @_[ HEAP, ARG0 ]; # ARG0 = OUTPUT, ARG1 = WID
-    my $answer = eval { $heap->{ decency }->handle_safe( $heap->{ server }, $attr ) };
+    my $answer = eval { $heap->{ decency }->handle_safe( $attr ) };
     if ( $@ ) {
         $heap->{ logger }->error( "Error in handling: $@" );
         $heap->{ client }->put( { action => '450 Temporary problem' } );

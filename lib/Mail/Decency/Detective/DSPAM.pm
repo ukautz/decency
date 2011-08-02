@@ -205,7 +205,7 @@ sub handle {
 sub train {
     my ( $self, $mode ) = @_;
     
-    die "Train mode has to be 'spam' or 'ham'\n"
+    DD::cop_it "Train mode has to be 'spam' or 'ham'\n"
         unless $mode eq 'spam' || $mode eq 'ham';
     
     my $result = $self->retreive_result( "learn_${mode}" );
@@ -225,7 +225,7 @@ sub retreive_result {
     
     # determine mode
     my $mode_method = "mode_${mode}";
-    die "Cannot use mode '$mode'. Not defined!\n"
+    DD::cop_it "Cannot use mode '$mode'. Not defined!\n"
         unless $self->can( $mode_method );
     my $mode_cmd = $self->$mode_method;
     

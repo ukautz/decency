@@ -17,12 +17,11 @@ use Mouse;
 extends qw/
     Mail::Decency::Core::Server
 /;
-use Mail::Decency::Core::POEForking::PreQueueSMTP;
-use Mail::Decency::Detective;
-use Mail::Decency::Doorman;
 use Scalar::Util qw/ weaken /;
 use Net::DNS;
 use File::Temp qw/ tempfile /;
+use Time::HiRes qw/ gettimeofday tv_interval /;
+use Mail::Decency::Helper::Debug;
 
 =head1 CLASS ATTRIBUTES
 
@@ -52,11 +51,46 @@ has mode => ( isa => 'Str', is => 'ro', default => 'prequeue' );
 
 =head2 pmilter
 
-
-
 =cut
 
 has pmilter => ( isa => 'Mail::Decency::Core::MilterServer', is => 'ro' );
+
+=head2 smtp
+
+=cut
+
+has smtp => ( isa => 'Mail::Decency::Core::POEForking::PreQueueSMTP', is => 'ro' );
+
+
+=head2 enforce_reinject
+
+Handler to Detective instance
+
+=cut
+
+has enforce_reinject => ( isa => 'Bool', is => 'ro', default => 0 );
+
+
+=head2 detective_spam_reply : Str
+
+Detective has normally no spam reply, so here it can be set
+
+Default: SPAM detected
+
+=cut
+
+has detective_spam_reply => ( isa => 'Str', is => 'ro', default => 'SPAM detected' );
+
+
+=head2 detective_virus_reply : Str
+
+Detective has normally no spam reply, so here it can be set
+
+Default: SPAM detected
+
+=cut
+
+has detective_virus_reply => ( isa => 'Str', is => 'ro', default => 'Virus detected' );
 
 =head1 METHODS
 
@@ -75,8 +109,20 @@ sub init {
     # $self->init_cache();
     # $self->init_database();
     
+    my $defender_conf_ref = $self->config->{ defender } || {
+        #detective_spam_reply => '',
+        #detective_virus_reply => '',
+        #detective_enforce_reinject => 0,
+    };
+    
+    $self->{ mode } = $self->config->{ mode } || 'prequeue';
+    DD::cop_it "Mode $self->{ mode } not allowed, use either 'prequeue' or 'milter'\n"
+        unless $self->mode =~ /^(?:prequeue|milter)$/;
+    
     # init Detective instance, so we can use content filtering
     if ( defined $self->config->{ doorman } ) {
+        eval 'use Mail::Decency::Doorman; 1;'
+            or DD::cop_it "Could not load Doorman module: $@\n";
         my %config = (
             ( map {
                 ( $_ => $self->can( $_ ) && $self->$_ ? $self->$_ : $self->config->{ $_ } )
@@ -85,12 +131,16 @@ sub init {
         );
         $self->doorman( Mail::Decency::Doorman->new(
             config => \%config, config_dir => $self->config_dir ) );
-        $self->doorman->_encapsulated( 1 );
+        $self->doorman->encapsulated( 1 );
+        $self->doorman->encapsulated_server( $self );
         $self->doorman->init;
     }
     
     # init Detective instance, so we can use content filtering
     if ( defined $self->config->{ detective } ) {
+        eval 'use Mail::Decency::Detective; 1;'
+            or DD::cop_it "Could not load Detective module: $@\n";
+        
         my %config = (
             ( map {
                 ( $_ => $self->config->{ $_ } )
@@ -99,13 +149,26 @@ sub init {
         );
         $self->detective( Mail::Decency::Detective->new(
             config => \%config, config_dir => $self->config_dir ) );
-        $self->detective->_encapsulated( 1 );
+        $self->detective->encapsulated( 1 );
+        $self->detective->encapsulated_server( $self );
         $self->detective->init;
+        
+        # wheter we use milter or reininjection
+        $self->enforce_reinject( 1 )
+            if $defender_conf_ref->{ detective_enforce_reinject };
+        
+        # additional detective stuff
+        foreach my $key( qw/ detective_spam_reply detective_virus_reply / ) {
+            $self->$key( $defender_conf_ref->{ $key } )
+                if defined $defender_conf_ref->{ $key };
+        }
+        
+        DD::cop_it "Require reinjections if prequeue mode is ued or detective_enforce_reinject is set. Provide reinject in detective section\n"
+            if ! $self->detective->can_reinject
+            && ( $self->mode() eq 'prequeue' || $self->enforce_reinject ) 
+        ;
     }
     
-    $self->{ mode } = $self->config->{ mode } || 'prequeue';
-    die "Mode $self->{ mode } not allowed, use either 'prequeue' or 'milter'\n"
-        unless $self->mode =~ /^(?:prequeue|milter)$/;
 }
 
 
@@ -129,23 +192,64 @@ sub run {
 
 sub start {
     my ( $self ) = @_;
+    
     $self->set_locker( 'default' );
     $self->set_locker( 'database' );
     $self->set_locker( 'reporting' )
         if $self->config->{ reporting };
     
+    $self->logger->debug1( sprintf( 'Start Defender in %s mode', $self->mode ) );
+    
     if ( $self->mode eq 'prequeue' ) {
-        Mail::Decency::Core::POEForking::PreQueueSMTP->new( $self );
+        eval 'use Mail::Decency::Core::POEForking::PreQueueSMTP; 1;'
+            or DD::cop_it "Could not load Mail::Decency::Core::POEForking::PreQueueSMTP: $@\n";
+        $self->{ smtp } = Mail::Decency::Core::POEForking::PreQueueSMTP->new( $self );
+        
+        if ( $self->has_detective ) {
+            # update session cache from doorman and disable reinject
+            $self->detective->register_hook( session_init => sub {
+                my ( $server ) = @_;
+                #$server->session->disable_reinject( 1 )
+            } );
+        }
     }
     else {
         eval 'use Sendmail::PMilter; use Mail::Decency::Core::MilterServer; 1;'
-            or die "Could not load Sendmail::PMilter: $@\n";
+            or DD::cop_it "Could not load Sendmail::PMilter: $@\n";
         $self->{ pmilter } = Mail::Decency::Core::MilterServer->new( parent => $self );
+        
+        if ( $self->has_detective ) {
+            # update session cache from doorman and disable reinject
+            $self->detective->register_hook( session_init => sub {
+                my ( $server ) = @_;
+                
+                # get context
+                my $defender = $server->encapsulated_server;
+                my $ctx = $defender->pmilter->current_context;
+                return unless $ctx;
+                
+                # for detective -> update cache
+                # update doorman
+                my $data_ref = $ctx->getpriv() || {};
+                if ( defined $data_ref->{ doorman_session_data } ) {
+                    $server->session->update_from_doorman_cache(
+                        $data_ref->{ doorman_session_data } );
+                }
+                
+                # disable reinject ?
+                $server->session->disable_reinject( 1 )
+                    unless $defender->enforce_reinject;
+                
+            } );
+        }
     }
 }
 
 sub handle_safe {
     my ( $self, $type, $ref ) = @_;
+    
+    
+    my $start = [ gettimeofday() ];
     
     #
     # DOORMAN
@@ -186,13 +290,17 @@ sub handle_safe {
         );
         
         # pipe through Doorman instance
-        my $res = $self->doorman->handle_safe( \%attrs );
+        my $res = $self->doorman->handle_safe( \%attrs, { return_session_data => 1 } );
+        
+        $self->logger->debug1( sprintf( 'Time for Doorman: %0.2f', tv_interval( $start, [ gettimeofday() ] ) ) );
+        
+        # we can go on
         if ( $res->{ action } =~ /^(PREPEND|OK|DUNNO)(?: (.+?))?$/ ) {
-            print "*** DOORMAN RETURN OK\n";
-            return ( 1, "" );
+            return ( 1, "", $res->{ session_data } );
         }
+        
+        # this it is .. reject
         else {
-            print "*** DOORMAN RETURN REJECT (action=$res->{ action })\n";
             my ( $mode, $msg ) = split( / /, $res->{ action }, 2 );
             return ( 0, $res->{ action } );
         }
@@ -204,9 +312,12 @@ sub handle_safe {
     elsif ( $type eq 'data' && $self->has_detective ) {
         
         # pipe through Detective instance
-        my @r = $self->detective->handle_safe( $ref );
+        my @res;
+        eval { @res = $self->detective->handle_safe( $ref ); };
         
-        return @r;
+        $self->logger->debug1( sprintf( 'Time for Detective: %0.2f', tv_interval( $start, [ gettimeofday() ] ) ) );
+        
+        return @res;
     }
     
     return ( 1, "" );
@@ -217,7 +328,53 @@ sub setup {
     my ( $self ) = @_;
     $self->doorman->setup if $self->has_doorman;
     $self->detective->setup if $self->has_detective;
-    print "****\nCall Setup\n******\n";
+}
+
+
+sub server_meth {
+    my ( $self, $meth, @args ) = @_;
+    my %res;
+    foreach my $name( qw/ doorman detective / ) {
+        my $can = 'has_'. $name;
+        if ( $self->$can ) {
+            $res{ $name } = wantarray
+                ? [ $self->$name->$meth( @args ) ]
+                : scalar $self->$name->$meth( @args )
+            ;
+        }
+    }
+    return wantarray ? %res : \%res;
+}
+
+sub detective_response {
+    my ( $self, $final_state ) = @_;
+    
+    my $detective = $self->detective;
+    my $enforce_reinject = $self->enforce_reinject;
+    
+    # when using reinject, discard 
+    if ( $enforce_reinject ) {
+        return 'discard';
+    }
+    
+    # virus handle
+    elsif ( $final_state eq 'virus' && $detective->virus_handle eq 'bounce' ) {
+        return ( 'reject', $self->detective_spam_reply );
+    }
+    
+    # spam handle
+    elsif ( $final_state eq 'spam' && $detective->spam_handle eq 'bounce' ) {
+        return ( 'reject', $self->detective_virus_reply );
+    }
+    
+    # discard handle
+    elsif ( 
+        ( $final_state eq 'spam' && $detective->spam_handle eq 'delete' )
+        || ( $final_state eq 'virus' && $detective->virus_handle eq 'delete' )
+    ) {
+        return 'discard';
+    }
+    
 }
 
 =head1 AUTHOR

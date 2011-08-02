@@ -164,7 +164,7 @@ after init => sub {
     if ( defined( my $dir = $self->config->{ exclusions }->{ dir } ) ) {
         $dir = $self->config_dir. "/$dir"
             if ! -d $dir && $dir !~ /^\//;
-        die "Exclusion dir '$dir' does not exist or not accessable\n"
+        DD::cop_it "Exclusion dir '$dir' does not exist or not accessable\n"
             unless -d $dir;
         $self->exclusion_dir( $dir );
         push @exclusion_methods, '_get_exclude_from_dir';
@@ -174,12 +174,12 @@ after init => sub {
     if ( defined( my $file = $self->config->{ exclusions }->{ file } ) ) {
         $file = $self->config_dir. "/$file"
             if ! -f $file && $file !~ /^\//;
-        die "Exclusion file '$file' does not exist or not accessable\n"
+        DD::cop_it "Exclusion file '$file' does not exist or not accessable\n"
             unless -f $file;
-        die "Exclusion file '$file' not readable\n"
+        DD::cop_it "Exclusion file '$file' not readable\n"
             unless -r $file;
         open my $fh, '<', $file
-            or die "Error opening exclusion file '$file': $@";
+            or DD::cop_it "Error opening exclusion file '$file': $@";
         close $fh;
         $self->exclusion_file( $file );
         push @exclusion_methods, '_get_exclude_from_file';
@@ -285,7 +285,7 @@ sub _get_exclude_from_dir {
             }
         
             open $fh, '<', $file 
-                or die "Cannot open exclusions file '". $file. "': $!";
+                or DD::cop_it "Cannot open exclusions file '". $file. "': $!";
             
             while ( my $l = <$fh> ) {
                 chomp $l;
@@ -317,7 +317,7 @@ sub _get_exclude_from_file {
     my $fh;
     eval {
         open $fh, '<', $self->exclusion_file 
-            or die "Cannot open exclusions file '". $self->exclusion_file. "': $!";
+            or DD::cop_it "Cannot open exclusions file '". $self->exclusion_file. "': $!";
         
         CHECK_LINE:
         while ( my $l = <$fh> ) {

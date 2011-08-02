@@ -97,6 +97,14 @@ The filer used for cleanup
 
 has mime_filer => ( is => 'rw', isa => "MIME::Parser::FileUnder" );
 
+=head2 mime_header_changes
+
+Tracks changs in MIME headers
+
+=cut
+
+has mime_header_changes => ( is => 'rw', isa => "HashRef", default => sub {{}} );
+
 =head2 mime_fh
 
 File handle for mime file
@@ -150,6 +158,15 @@ has _mime_changed => (
         mime_written     => 'unset'
     }
 );
+
+
+=head2 disable_reinject
+
+Can be set either by modules or for example by milter from Defender
+
+=cut
+
+has disable_reinject => ( is => 'rw', isa => 'Bool', default => 0 );
 
 
 =head1 METHODS
@@ -213,10 +230,12 @@ Modify header, announces changes
 =cut
 
 sub mime_header {
-    my ( $self, $meth, @args ) = @_;
+    my ( $self, $meth, $header, @value ) = @_;
     return $self->mime->head unless $meth;
+    $self->mime_header_changes->{ $meth } ||= {};
+    push @{ $self->mime_header_changes->{ $meth }->{ $header } ||= [] }, @value;
     $self->mime_has_changed();
-    return $self->mime->head->$meth( @args );
+    return $self->mime->head->$meth( $header, @value );
 }
 
 
@@ -229,7 +248,7 @@ Write store YAML file
 sub update_store {
     my ( $self ) = @_;
     open my $fh, '>', $self->store
-        or die "Cannot open store file ". $self->store. " for write: $!";
+        or DD::cop_it "Cannot open store file ". $self->store. " for write: $!";
     my %create = ();
     $create{ from } = $self->from if $self->from;
     $create{ to } = $self->to if $self->to;
@@ -336,6 +355,8 @@ sub cleanup {
     # remove store file
     unlink $self->file
         if $self->file && -f $self->file;
+    
+    $self->mime_header_changes( {} );
     
     $self->unset;
     
@@ -464,7 +485,7 @@ Triggerd on file set
 sub _init_file {
     my ( $self ) = @_;
     
-    die "Cannot access file '". $self->file. "'" unless -f $self->file;
+    DD::cop_it "Cannot access file '". $self->file. "'" unless -f $self->file;
     $self->file_size( -s $self->file );
     
     # store
@@ -476,8 +497,8 @@ sub _init_file {
         eval {
             $ref = YAML::LoadFile( $self->store );
         };
-        die "Error loading YAML file ". $self->store. ": $@" if $@;
-        die "YAML file ". $self->store. " mal formatted, should be HASH, is '". ref( $ref ). "'"
+        DD::cop_it "Error loading YAML file ". $self->store. ": $@" if $@;
+        DD::cop_it "YAML file ". $self->store. " mal formatted, should be HASH, is '". ref( $ref ). "'"
             unless ref( $ref ) eq 'HASH';
         
         foreach my $attr( qw/ from to / ) {
@@ -493,7 +514,7 @@ sub _init_file {
     
     # read from file and create
     my $orig_fh = IO::File->new( $self->file, 'r' )
-        or die "Cannot open ". $self->file. " for read\n";
+        or DD::cop_it "Cannot open ". $self->file. " for read\n";
     
     eval {
         my $mime = $parser->parse( $orig_fh );
@@ -501,7 +522,7 @@ sub _init_file {
         $self->mime_filer( $parser->filer );
         $self->mime_fh( $orig_fh );
     };
-    die "Error parsing MIME: $@\n" if $@;
+    DD::cop_it "Error parsing MIME: $@\n" if $@;
     
     # get mime header shorthcut
     my $mime_head = $self->mime->head;

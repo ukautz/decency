@@ -23,7 +23,6 @@ use YAML;
 use MIME::Parser;
 use MIME::Lite;
 use IO::File;
-use Net::SMTP;
 use File::Path qw/ mkpath /;
 use File::Copy qw/ copy move /;
 use File::Temp qw/ tempfile /;
@@ -34,7 +33,7 @@ use Mail::Decency::Helper::Config qw/
     merged_config
 /;
 
-
+use Mail::Decency::Helper::Debug;
 use Mail::Decency::Detective::Core::Constants;
 use Mail::Decency::Core::SessionItem::Detective;
 use Mail::Decency::Core::POEForking::SMTP;
@@ -104,6 +103,16 @@ Defaults to spool_dir/failure
 =cut
 
 has reinject_failure_dir => ( is => 'rw', isa => 'Str' );
+
+=head2 bounce_on_reinject_failure : Bool
+
+Whether to bounce if a reinjection failed.
+
+Default: 0 (disabled, do not bounce)
+
+=cut
+
+has bounce_on_reinject_failure => ( is => 'rw', isa => 'Bool', default => 0 );
 
 =head2 quarantine_dir : Str
 
@@ -292,12 +301,12 @@ has doorman_verify_key => ( is => 'rw', isa => 'Str', predicate => 'has_doorman_
     # check file
     $key_file = $self->config_dir . "/$key_file"
         if $self->has_config_dir && ! -f $key_file;
-    die "Could not access doorman_verify_key key file '$key_file'\n"
+    DD::cop_it "Could not access doorman_verify_key key file '$key_file'\n"
         unless -f $key_file;
     
     # read key
     open my $fh, '<', $key_file
-        or die "Cannot open doorman_verify_key key file for read: $!\n";
+        or DD::cop_it "Cannot open doorman_verify_key key file for read: $!\n";
     my $key_content = join( "", <$fh> );
     close $fh;
     
@@ -337,6 +346,15 @@ Default: Postmaster <postmaster@localhost>
 has notification_from => ( is => 'rw', isa => 'Str', default => 'Postmaster <postmaster@localhost>' );
 
 
+=head2 reinjections : ArrayRef[HashRef]
+
+List of reinjection hosts
+
+=cut
+
+has reinjections => ( is => 'rw', isa => 'ArrayRef[HashRef]', predicate => 'can_reinject' );
+
+
 =head1 METHODS
 
 =head2 init
@@ -346,6 +364,32 @@ has notification_from => ( is => 'rw', isa => 'Str', default => 'Postmaster <pos
 
 sub init {
     my ( $self ) = @_;
+    
+    # check classes for reinjection
+    if ( defined $self->config->{ reinject } ) {
+        my $reinject_ref = ref( $self->config->{ reinject } ) eq 'ARRAY'
+            ? $self->config->{ reinject }
+            : [ $self->config->{ reinject } ]
+        ;
+        my %smtp_classes;
+        foreach my $ref( @$reinject_ref ) {
+            if ( $ref->{ ssl } ) {
+                $smtp_classes{ "Net::SMTP::SSL" }++;
+            }
+            elsif ( $ref->{ tls } ) {
+                $smtp_classes{ "Net::SMTP::TLS" }++;
+            }
+            else {
+                $smtp_classes{ "Net::SMTP" }++;
+            }
+        }
+        foreach my $class( keys %smtp_classes ) {
+            eval "use $class; 1;"
+                or DD::cop_it "Could not load $class: $@, required for reinjection (deactivate tls/ssl or install this module)\n";
+        }
+        
+        $self->reinjections( $reinject_ref );
+    }
     
     # init name
     $self->name( "detective" );
@@ -359,10 +403,7 @@ sub init {
 sub setup {
     my ( $self ) = @_;
     
-    warn "***\nDetective init PRE \n***\n";
     return if $self->{ inited } ++;
-    
-    warn "***\nDetective init OK\n***\n";
     
     $self->init_cache();
     $self->init_database();
@@ -384,11 +425,14 @@ sub init_reloadable {
     $self->notification_from( $self->config->{ notification_from } )
         if $self->config->{ notification_from };
     
+    # reinject failure behavior
+    $self->bounce_on_reinject_failure( $self->config->{ bounce_on_reinject_failure } ? 1 : 0 );
+    
     # having scoring ?
     if ( defined( my $virus_ref = $self->config->{ virus } ) && ref( $self->config->{ virus } ) ) {
         
         # what's the basic behavior ?
-        die "behavior has to be set to 'ignore', 'scoring' or 'strict' in spam section\n"
+        DD::cop_it "behavior has to be set to 'ignore', 'scoring' or 'strict' in spam section\n"
             unless $virus_ref->{ handle }
             && $virus_ref->{ handle } =~ /^(?:bounce|delete|quarantine|ignore)$/
         ;
@@ -408,8 +452,7 @@ sub init_reloadable {
                 my $enable_meth = "virus_$enable";      # virus_notify_sender
                 
                 # is enabled ?
-                $self->$enable_meth( 1 )
-                    if $virus_ref->{ $enable };
+                $self->$enable_meth( $virus_ref->{ $enable } ? 1 : 0 );
                 
                 # having custom template ?
                 if ( $self->$enable_meth() && $virus_ref->{ $template } ) {
@@ -417,7 +460,7 @@ sub init_reloadable {
                         ? $virus_ref->{ $template }
                         : $self->config_dir. "/$virus_ref->{ $template }"
                     ;
-                    die "Cant read from virus $template file '$filename'\n"
+                    DD::cop_it "Cant read from virus $template file '$filename'\n"
                         unless -f $filename;
                     
                     # template
@@ -440,7 +483,7 @@ sub init_reloadable {
     if ( defined( my $spam_ref = $self->config->{ spam } ) && ref( $self->config->{ spam } ) ) {
         
         # what's the basic behavior ?
-        die "behavior has to be set to 'ignore', 'scoring' or 'strict' in spam section\n"
+        DD::cop_it "behavior has to be set to 'ignore', 'scoring' or 'strict' in spam section\n"
             unless $spam_ref->{ behavior }
             && $spam_ref->{ behavior } =~ /^(?:scoring|strict|ignore)$/
         ;
@@ -449,7 +492,7 @@ sub init_reloadable {
         
         # how to handle recognized spam ?
         unless ( $self->spam_behavior eq 'ignore' ) {
-            die "spam_handle has to be set to 'tag', 'bounce' or 'delete' in scoring!\n"
+            DD::cop_it "spam_handle has to be set to 'tag', 'bounce' or 'delete' in scoring!\n"
                 unless $spam_ref->{ handle }
                 && $spam_ref->{ handle } =~ /^(?:tag|bounce|delete)$/
             ;
@@ -464,7 +507,7 @@ sub init_reloadable {
             
             # set threshold
             if ( $self->spam_behavior eq 'scoring' ) {
-                die "Require threshold in spam section with behavior = scoring\n"
+                DD::cop_it "Require threshold in spam section with behavior = scoring\n"
                     unless defined $spam_ref->{ threshold };
                 $self->spam_threshold( $spam_ref->{ threshold } );
             }
@@ -475,10 +518,13 @@ sub init_reloadable {
                 
                 # having a template for those notifications ?
                 if ( $spam_ref->{ recipient_template } ) {
-                    die "Cannot read from spam recipient_template file '$spam_ref->{ recipient_template }'\n"
+                    DD::cop_it "Cannot read from spam recipient_template file '$spam_ref->{ recipient_template }'\n"
                         unless -f $spam_ref->{ recipient_template };
                     $self->spam_recipient_template( $spam_ref->{ recipient_template } );
                 }
+            }
+            else {
+                $self->spam_notify_recipient( 0 );
             }
         }
     }
@@ -497,8 +543,11 @@ sub init_reloadable {
         
         # hmm, this is not good -> warn
         else {
-            $self->logger->error( "Warning: You accept scoring from external Doorman servers, but don't use a verification key! Spammers can inject positive scoring!" );
+            $self->logger->error( "CAUTION: You accept scoring from external Doorman servers, but don't use a verification key! Spammers can inject positive scoring!" );
         }
+    }
+    else {
+        $self->accept_scoring( 0 );
     }
     
     # load all modules
@@ -516,11 +565,11 @@ sub init_dirs {
     my ( $self ) = @_;
     
     # check and set spool dir
-    die "Require 'spool_dir' in config (path to directory where saving mails while filtering)\n"
+    DD::cop_it "Require 'spool_dir' in config (path to directory where saving mails while filtering)\n"
         unless $self->config->{ spool_dir };
     mkpath( $self->config->{ spool_dir }, { mode => 0700 } )
         unless -d $self->config->{ spool_dir };
-    die "Require 'spool_dir'. '". $self->config->{ spool_dir }. "' is not a directory. Please create it!\n"
+    DD::cop_it "Require 'spool_dir'. '". $self->config->{ spool_dir }. "' is not a directory. Please create it!\n"
         unless -d $self->config->{ spool_dir };
     $self->spool_dir( $self->config->{ spool_dir } );
     
@@ -536,7 +585,7 @@ sub init_dirs {
         $self->config->{ $name } ||= $self->spool_dir. "/$dir";
         mkpath( $self->config->{ $name }, { mode => 0700 } )
             unless -d $self->config->{ $name };
-        die "Could not non existing '$name' dir '". $self->config->{ $name }. "'. Please create yourself.\n"
+        DD::cop_it "Could not non existing '$name' dir '". $self->config->{ $name }. "'. Please create yourself.\n"
             unless -d $self->config->{ $name };
         $self->$name( $self->config->{ $name } );
         $self->logger->debug2( "Set '$name'-dir to '". $self->$name. "'" );
@@ -610,7 +659,7 @@ sub train {
     } @{ $self->childs };
     
     # none found ?
-    die "No trainable modules enabled\n"
+    DD::cop_it "No trainable modules enabled\n"
         unless @trainable;
     
     # strip cmd_
@@ -618,7 +667,7 @@ sub train {
     
     # having move ?
     if ( $args_ref->{ move } ) {
-        die "Move directory '$args_ref->{ move }' does not exist?\n"
+        DD::cop_it "Move directory '$args_ref->{ move }' does not exist?\n"
             unless -d $args_ref->{ move };
         $args_ref->{ move } =~ s#\/+$##;
     }
@@ -628,7 +677,7 @@ sub train {
         ? glob( "$args_ref->{ files }/*" )
         : glob( $args_ref->{ files } )
     ;
-    die "No mails for training found for '$args_ref->{ files }'"
+    DD::cop_it "No mails for training found for '$args_ref->{ files }'"
         unless @files;
     
     # begin training
@@ -714,8 +763,8 @@ sub train {
             $target =~ s/\-+$//;
             $target =~ s/^\-+//;
             move( $file, $target )
-                or die "Move error: $!\n";
-            die "Oops, cannot move '$file' -> '$target'\n" unless -f $target;
+                or DD::cop_it "Move error: $!\n";
+            DD::cop_it "Oops, cannot move '$file' -> '$target'\n" unless -f $target;
         }
         elsif ( $args_ref->{ remove } ) {
             unlink( $file );
@@ -790,19 +839,19 @@ sub handle_safe {
     
     $self->logger->debug3( "Handle new: $ref->{ file }, from: $ref->{ from }, to: $ref->{ to }" );
     
-    my ( $ok, $message );
+    my ( $ok, $message, $status );
     
     # better eval that.. the server shold NOT die .
     eval {
         
         # write the from, to, size and such to yaml file
         open my $fh, ">", $ref->{ file }. ".info"
-            or die "Cannot open '$ref->{ file }' for read\n";
+            or DD::cop_it "Cannot open '$ref->{ file }' for read\n";
         
         print $fh YAML::Dump( $ref );
         close $fh;
         
-        ( $ok, $message )
+        ( $ok, $message, $status )
             = $self->handle( $ref->{ file }, -s $ref->{ file }, $ref->{ args } || undef );
     };
     
@@ -811,7 +860,7 @@ sub handle_safe {
         $self->logger->error( "Error handling '$ref->{ file }': $@" );
     }
     
-    return ( $ok, $message );
+    return ( $ok, $message, $status );
 }
 
 
@@ -859,6 +908,8 @@ sub handle {
     $self->session_write_cache;
     
     # finish all
+    #   * status: ongoing, spam, virus
+    #   * final code: DETECTIVE_FINAL_*
     ( $status, my $final_code ) = $self->finish( $status );
     
     # time diff
@@ -897,10 +948,10 @@ sub handle {
     # return the final code to the SMTP server, which will then either force the mta
     #   (postfix) to bounce the mail by rejecting it or accept, to 
     if ( $final_code == DETECTIVE_FINAL_OK || $final_code == DETECTIVE_FINAL_DELETED ) {
-        return ( 1 );
+        return ( 1, undef, $status );
     }
     else {
-        return ( 0, $spam_details );
+        return ( 0, $spam_details, $status );
     }
 }
 
@@ -1068,7 +1119,7 @@ sub finish_spam {
     
     # do tag mail
     else {
-        my $header = $self->session->mime->head;
+        my $header = $session->mime->head;
         
         # prefix subject ?
         if ( $self->has_spam_subject_prefix ) {
@@ -1078,9 +1129,9 @@ sub finish_spam {
         }
         
         # add tag
-        $header->replace( 'X-Decency-Result'  => 'SPAM' );
-        $header->replace( 'X-Decency-Score'   => $score );
-        $header->replace( 'X-Decency-Details' => join( " | ", @info ) )
+        $session->mime_header( replace => 'X-Decency-Result'  => 'SPAM' );
+        $session->mime_header( replace => 'X-Decency-Score'   => $score );
+        $session->mime_header( replace => 'X-Decency-Details' => join( " | ", @info ) )
             if $self->spam_noisy_headers;
         
         # update mime
@@ -1166,11 +1217,11 @@ sub finish_ok {
     
     # being noisy -> set spam info even if not spam
     if ( $self->spam_noisy_headers ) {
-        my $header = $self->session->mime->head;
-        $header->replace( 'X-Decency-Result'  => 'GOOD' );
-        $header->replace( 'X-Decency-Score'   => $self->session->spam_score );
-        $header->replace( 'X-Decency-Details' => join( " | ",
-            @{ $self->session->spam_details } ) );
+        my $session = $self->session;
+        $session->mime_header( replace => 'X-Decency-Result'  => 'GOOD' );
+        $session->mime_header( replace => 'X-Decency-Score'   => $self->session->spam_score );
+        $session->mime_header( replace => 'X-Decency-Details' => join( " | ",
+            @{ $session->spam_details } ) );
         
         # update mime
         $self->session->write_mime;
@@ -1189,68 +1240,157 @@ Reinject mails to postfix queue, or archive in send-queue
 sub reinject {
     my ( $self, $type ) = @_;
     
-    # do no reinject in encapsulated mode!
-    return DETECTIVE_FINAL_OK if $self->_encapsulated;
+    # disabled for this one mail
+    if ( $self->session->disable_reinject ) {
+        $self->logger->debug2( "Reinjection is disabled by session" );
+        return DETECTIVE_FINAL_OK;
+    }
     
-    my $reinject_ref = $self->config->{ reinject };
+    # do no reinject if no reinjection is defined
+    unless ( $self->can_reinject ) {
+        $self->logger->debug2( "Do not reinject mail, cause no reinject is set" );
+        return DETECTIVE_FINAL_OK;
+    }
     
-    eval {
-        
-        my $smtp = Net::SMTP->new(
-            ( $reinject_ref->{ host } || "localhost" ). ":". ( $reinject_ref->{ port } || 16000 ),
-            Hello   => 'decency',
-            Timeout => 30,
-            #Debug  => 1,
-        ) or die "ARR: ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" );
-        
-        $smtp->hello( 'localhost' );
-        $smtp->mail( $self->session->from );
-        $smtp->to( $self->session->orig_to );
-        $smtp->data;
-        
-        # parse file and print all lines
-        open my $fh, '<', $self->session->current_file;
-        while ( my $l = <$fh> ) {
-            chomp $l;
-            $smtp->datasend( $l. CRLF ) or die $!;
-        }
-        
-        # end data
-        $smtp->dataend;
-        
-        # get reponse message containg new ID
-        my $message = $smtp->message;
-        
-        # quit connection
-        $smtp->quit;
-        
-        # determine message
-        if ( $message && $message =~ /queued as ([A-Z0-9]+)/ ) {
-            $self->logger->debug0( "Reinjected mail as $1" );
-            $self->session->next_id( $1 );
-            $self->session_write_cache;
-        }
-        else {
-            Mail::Decency::Core::Exception::ReinjectFailure->throw( { message => "Could not reinject" } );
-        }
+    # get all reinjections
+    my $reinjects_ref = $self->reinjections;
+    my $any_delivered = 0;
+    
+    # ok, the "message" method does not contain the last
+    #   response, but the last SUCCESSFUL response.. not good
+    #   if we want to determine the actual error response
+    no strict 'refs';
+    my $oldgetline = *{'Net::Cmd::getline'}{ CODE };
+    my $last_msg = \( '' );
+    local *{'Net::Cmd::getline'} = sub {
+        my $line = $oldgetline->( @_ );
+        ( undef, my $msg ) = split( ' ', $line, 2 );
+        chomp( $msg );
+        $last_msg = \$msg;
+        return $line;
     };
+    use strict 'refs';
     
-    return DETECTIVE_FINAL_OK unless $@;
-    
-    given ( $@ ) {
+    # perform all reinjections
+    foreach my $reinject_ref( @$reinjects_ref ) {
         
-        # reinect failure -> save to failure dir and log
-        when( blessed( $_ ) && $_->isa( 'Mail::Decency::Core::Exception::ReinjectFailure' ) ) {
-            $self->logger->error( "Could not retreive reinjection ID - possible error on reinjection ? Reinject manual." );
-            $self->_save_mail_to_dir( 'reinject_failure_dir' );
-        }
+        # if we have already delivered the mail in this
+        #   reinject instance is not a copy -> do not use
+        next if $any_delivered && ! $reinject_ref->{ copy };
         
-        # some other error..
-        default {
-            $self->logger->error( "Could not reinject mail: $@" );
+        # get host
+        my $reinject_host = ( $reinject_ref->{ host } || "localhost" ). ":". ( $reinject_ref->{ port } || 10250 );
+        
+        my $dbg_str = sprintf( 'reinject-host: "%s", from: "%s", to: "%s"',
+            $reinject_host, $self->session->from, $self->session->orig_to );
+        
+        eval {
+            
+            # determine smtp class
+            my $class = $reinject_ref->{ ssl }
+                ? 'Net::SMTP::SSL'
+                : ( $reinject_ref->{ tls }
+                    ? 'Net::SMTP::TLS'
+                    : 'Net::SMTP'
+                )
+            ;
+            
+            # for tls we require pre auth
+            my %pre_auth = $class =~ /::TLS$/ && $reinject_ref->{ user }
+                ? ( User => $reinject_ref->{ user }, Password => $reinject_ref->{ pass } )
+                : ()
+            ;
+            
+            # init connection
+            my $smtp = $class->new(
+                $reinject_host,
+                Hello   => $reinject_ref->{ hello } || 'decency',
+                Timeout => 30,
+                Debug   => $reinject_ref->{ debug } || $ENV{ DECENCY_REINJECT_DEBUG } || 0,
+                %pre_auth
+            ) or DD::cop_it "Could not open SMTP connection: ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" );
+            
+            # auth ?
+            $smtp->auth( $reinject_ref->{ user }, $reinject_ref->{ pass } || '' )
+                or DD::cop_it [ auth => $smtp->code, $$last_msg ]
+                if $reinject_ref->{ user } && ! $class =~ /::TLS$/;
+            
+            # send hello
+            #$smtp->hello( $reinject_ref->{ hello } || 'decency' );
+            $smtp->mail( $self->session->from )
+                or DD::cop_it [ from => $smtp->code, $$last_msg ];
+            $smtp->to( $self->session->orig_to )
+                or DD::cop_it [ to => $smtp->code, $$last_msg ];
+            $smtp->data
+                or DD::cop_it [ data => $smtp->code, $$last_msg ];
+            
+            # parse file and print all lines
+            open my $fh, '<', $self->session->current_file;
+            while ( my $l = <$fh> ) {
+                chomp $l;
+                $smtp->datasend( $l. CRLF )
+                    or DD::cop_it $!;
+            }
+            
+            # end data
+            $smtp->dataend
+                or DD::cop_it [ dataend => $smtp->code, $$last_msg ];
+            
+            # get reponse message containg new ID
+            my $message = $$last_msg;
+            
+            # quit connection
+            $smtp->quit
+                or DD::cop_it [ quit => $smtp->code, $$last_msg ];
+            
+            # is delivered
+            $any_delivered ++;
+            
+            # determine message
+            if ( $message && $message =~ /queued as ([A-Z0-9]+)/ ) {
+                my $next_id = $1;
+                $self->logger->debug0( "Reinjected mail as $next_id ($dbg_str)" );
+                $self->session->next_id( $next_id );
+                $self->session_write_cache;
+            }
+            else {
+                $self->logger->debug0(
+                    "Failed to determine ID after successful reinject, response: '".
+                    $message. "' ($dbg_str)" );
+            }
+        };
+        
+        # got error
+        if ( my $err= $@ ) {
+            
+            # this is an not accepted SMTP command
+            if ( ref( $err ) ) {
+                my ( $type, $code, $msg ) = @$err;
+                chomp $msg;
+                $self->logger->error( sprintf(
+                    'Error in reinject with SMTP-%s: (%s / code: "%s", msg: "%s")',
+                    uc( $type ), $dbg_str, $code, $msg ) );
+            }
+            
+            # somethin else..
+            else {
+                $self->logger->error( "Error in reinject: $err" );
+            }
         }
     }
     
+    # delivered OK
+    return DETECTIVE_FINAL_OK if $any_delivered;
+    
+    # save failed mail to failure dir
+    my $file = $self->_save_mail_to_dir( 'reinject_failure_dir' );
+    $self->logger->error( "Could NOT reinject mail in any host, saved mail to '$file'" );
+    
+    # do not bounce.. 
+    return DETECTIVE_FINAL_OK
+        unless $self->bounce_on_reinject_failure;
+    
+    # do probably bounce
     return DETECTIVE_FINAL_ERROR;
 }
 
@@ -1291,7 +1431,7 @@ sub send_notify {
             
             # read template ..
             open my $fh, '<', $self->$template_meth
-                or die "Cannot open '". $self->$template_meth. "' for read: $!\n";
+                or DD::cop_it "Cannot open '". $self->$template_meth. "' for read: $!\n";
             
             # add reason of rejection
             my %template_vars = ( reason => $type );
@@ -1303,7 +1443,7 @@ sub send_notify {
             $template_vars{ $_ } = $session->$_ for qw/ from to /;
             
             # add subject, if any
-            $template_vars{ subject } = $session->mime->head->get( 'Subject' ) || "(no subject)";
+            $template_vars{ subject } = $mime->head->get( 'Subject' ) || "(no subject)";
             
             # read and parse template
             @data = map {
@@ -1318,7 +1458,7 @@ sub send_notify {
         else {
             push @data, "Your mail to ". $session->to. " has been rejected.";
             push @data, "";
-            push @data, "Subject of the mail: ". ( $session->mime->head->get( 'Subject' ) || "(no subject)" );
+            push @data, "Subject of the mail: ". ( $mime->head->get( 'Subject' ) || "(no subject)" );
             push @data, "";
             push @data, "Reason: categorized as ". $type. ( $type eq 'virus' ? " (". $session->virus. ")" : "" );
         }
@@ -1331,7 +1471,7 @@ sub send_notify {
         ) );
         
         unless ( $self->reinject( $encaps ) == DETECTIVE_FINAL_OK ) {
-            die "Error sending $type $direction notification mail to $to\n";
+            DD::cop_it "Error sending $type $direction notification mail to $to\n";
         }
     };
     
@@ -1377,6 +1517,9 @@ sub session_init {
     ) );
     my $session = $self->session;
     
+    # reinject
+    $self->run_hooks( 'session_init' );
+    
     #
     # RETREIVE QUEUE ID, UPDATE FROM DETECTIVE CACHE
     #
@@ -1385,6 +1528,10 @@ sub session_init {
     if ( exists $args_ref->{ queue_id } ) {
         $session->id( $args_ref->{ queue_id } )
             if $args_ref->{ queue_id };
+    }
+    
+    elsif ( $args_ref->{ doorman_session_data } ) {
+        $session->update_from_doorman_cache( $args_ref->{ doorman_session_data } );
     }
     
     # try get from somewhere else
@@ -1406,7 +1553,7 @@ sub session_init {
         
         # oops, this should not happen, maybe in debug cases, if mails
         #   are directyly injected into the Detective ?!
-        elsif ( ! $self->_encapsulated ) {
+        elsif ( ! $self->encapsulated ) {
             $self->logger->error( "Could not determine Queue ID! No 'Received' header found! Postfix should set this!" );
         }
     }
@@ -1558,6 +1705,8 @@ sub _save_mail_to_dir {
     
     # copy file to archive folder
     copy( $session->current_file, $failure_file );
+    
+    return $failure_file;
 }
 
 =head1 AUTHOR

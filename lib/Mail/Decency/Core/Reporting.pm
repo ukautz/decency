@@ -155,7 +155,7 @@ after init => sub {
     
     if ( my $file = $reporting_ref->{ file } ) {
         my $dir = dirname( $file );
-        die "Reporting: Create directory '$dir', or we cannot use file '$file' for logging\n"
+        DD::cop_it "Reporting: Create directory '$dir', or we cannot use file '$file' for logging\n"
             unless -d $dir;
         $self->reporting_file( $file );
         push @log_methods, \&_reporting_log_file;
@@ -234,7 +234,7 @@ sub _reporting_log_file {
         my $file = $self->reporting_file;
         my $mode = -f $file ? '>>' : '>';
         open $fh, $mode, $file
-            or die "Cannot open reporting file '". $file. "' for write/append: $!";
+            or DD::cop_it "Cannot open reporting file '". $file. "' for write/append: $!";
         print $fh "$msg\n";
     };
     $self->logger->error( "Error in reporting: $@" ) if $@;

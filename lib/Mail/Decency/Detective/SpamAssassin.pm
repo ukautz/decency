@@ -158,7 +158,7 @@ Train mails into SpamAssassin
 sub train {
     my ( $self, $mode ) = @_;
     
-    die "Train mode has to be 'spam' or 'ham'\n"
+    DD::cop_it "Train mode has to be 'spam' or 'ham'\n"
         unless $mode eq 'spam' || $mode eq 'ham';
     
     my $client = $self->get_client();

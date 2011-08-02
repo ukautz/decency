@@ -14,13 +14,13 @@ Base class, don't instantiate!
 
 =head1 CLASS ATTRIBUTES
 
-=head2 id : Str
+# =head2 id : Str
 
-The primary identifier
+# The primary identifier
 
-=cut
+# =cut
 
-has id => ( is => 'rw', isa => "Str", required => 1 );
+# has id => ( is => 'rw', isa => "Str", required => 1 );
 
 =head2 spam_score : Num
 
@@ -79,6 +79,9 @@ Sender of the current mail
 
 has from => ( is => 'rw', isa => "Str", trigger => sub {
     my ( $self, $from ) = @_;
+    if ( $from =~ /<(.+?)>/ ) {
+        return $self->from( $1 );
+    }
     my ( $prefix, $domain ) = split( /\@/, $from || "" );
     $self->from_prefix( $prefix || "" ) if $prefix;
     $self->from_domain( $domain || "" ) if $domain;
@@ -106,7 +109,12 @@ Recipient of the current mail
 
 =cut
 
-has orig_to => ( is => 'rw', isa => "Str" );
+has orig_to => ( is => 'rw', isa => "Str", trigger => sub {
+    my ( $self, $to ) = @_;
+    if ( $to =~ /<(.+?)>/ ) {
+        return $self->orig_to( $1 );
+    }
+} );
 
 =head2 to : Str
 
@@ -116,6 +124,10 @@ Recipient of the current mail
 
 has to => ( is => 'rw', isa => "Str", trigger => sub {
     my ( $self, $to ) = @_;
+    if ( $to =~ /<(.+?)>/ ) {
+        return $self->to( $1 );
+    }
+    
     my ( $prefix, $domain ) = split( /\@/, $to || "" );
     
     # check delimiter
@@ -273,6 +285,8 @@ sub has_no_spam_detailsX {
     my $ref = $self->spam_details || [];
     return $#$ref == -1;
 }
+
+sub id { shift->identifier( @_ ) }
 
 
 =head1 AUTHOR

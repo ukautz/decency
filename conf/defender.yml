@@ -1,6 +1,6 @@
 ---
 
-mode: milter
+mode: prequeue
 
 stats:
     enable:
@@ -23,13 +23,14 @@ stats:
             year: 10
 
 logging:
-    syslog: 1
+    syslog: 0
     console: 1
     log_level: 20
-    directory: /var/log/decency
+    #directory: /var/log/decency
 
 cache:
-    class: none
+    class: FastMmap
+    share_file: /tmp/decency.mmap
 
 database:
     type: DBD
@@ -44,7 +45,6 @@ server:
     port: 14000
     instances: 4
 
-
 detective:
     
     spool_dir: /var/spool/decency
@@ -56,12 +56,12 @@ detective:
     spam:
         behavior: scoring
         threshold: -50
-        handle: tag
+        handle: delete
         noisy_headers: 1
         spam_subject_prefix: "SPAM:"
     
     virus:
-        handle: quarantine
+        handle: delete
         
         # for handle: bounce, delete or quarantine
         notify_sender: 1
@@ -72,9 +72,27 @@ detective:
         recipient_subject: 'Virus detection notification'
     
     modules:
-        - DeepDNSBL: "detective/deep-dnsbl.yml"
-        - DKIMVerify: "detective/dkim-verify.yml"
-        - Archive: detective/archive.yml
+        - DummyModule::DetectiveCMDTEST:
+            timeout: 1
+            disable: 1
+            cmd_check: /home/uk/03_HTTP/decency-dropbox/t/sample/cmd-test.sh
+        - DummyModule::DetectiveVIRUS:
+            timeout: 10
+            disable: 1
+        # - DeepDNSBL: "detective/deep-dnsbl.yml"
+        # - DKIMVerify: "detective/dkim-verify.yml"
+        # - Archive: detective/archive.yml
+    
+    reinject:
+        -
+            host: 127.0.0.1
+            port: 25253
+        -
+            host: 127.0.0.1
+            port: 25252
+        # -
+        #     host: 127.0.0.1
+        #     port: 10250
 
 doorman:
     
@@ -87,15 +105,15 @@ doorman:
     recipient_delimiter: '+'
     
     modules:
-        - Basic: doorman/basic.yml
-        - SenderPermit: doorman/sender-permit.yml
-        - CWL: doorman/cwl.yml
-        - DNSBL: doorman/dnsbl.yml
-        - CBL: doorman/cbl.yml
-        - SPF: doorman/spf.yml
-        - Association: doorman/association.yml
-        - GeoWeight: doorman/geo-weight.yml
-        - Honeypot: doorman/honeypot.yml
-        - Greylist: doorman/greylist.yml
-        - Throttle: doorman/throttle.yml
+        # - Basic: doorman/basic.yml
+        # - SenderPermit: doorman/sender-permit.yml
+        # - CWL: doorman/cwl.yml
+        # - DNSBL: doorman/dnsbl.yml
+        # - CBL: doorman/cbl.yml
+        # - SPF: doorman/spf.yml
+        # - Association: doorman/association.yml
+        # - GeoWeight: doorman/geo-weight.yml
+        # - Honeypot: doorman/honeypot.yml
+        # - Greylist: doorman/greylist.yml
+        # - Throttle: doorman/throttle.yml     
 

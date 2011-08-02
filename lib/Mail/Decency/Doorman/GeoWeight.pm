@@ -115,15 +115,15 @@ sub init {
             
             # check classes
             foreach my $class_ref( @classes ) {
-                die "'$class_ref' is not a HashRef! weight_classes should be ArrayRef[HashRef]\n"
+                DD::cop_it "'$class_ref' is not a HashRef! weight_classes should be ArrayRef[HashRef]\n"
                     unless ref( $class_ref ) eq 'HASH';
-                die "Require 'countries' as ArrayRef\n"
+                DD::cop_it "Require 'countries' as ArrayRef\n"
                     unless defined $class_ref->{ countries } && ref( $class_ref->{ countries } ) eq 'ARRAY';
-                die "Require 'weight' for countries '". join( ", ", @{ $class_ref->{ countries } } ). "'\n"
+                DD::cop_it "Require 'weight' for countries '". join( ", ", @{ $class_ref->{ countries } } ). "'\n"
                     unless defined $class_ref->{ weight } && $class_ref->{ weight } =~ /^\d+$/;
                 
                 foreach my $country( @{ $class_ref->{ countries } } ) {
-                    die "Please use 2-char country code format like 'DE' or 'US'.. '$country' does not fit\n"
+                    DD::cop_it "Please use 2-char country code format like 'DE' or 'US'.. '$country' does not fit\n"
                         unless length( $country ) == 2 && $country =~ /^[a-z]{2}$/i;
                     $self->weight_by_country->{ uc( $country ) } = $class_ref->{ weight };
                 }
@@ -139,7 +139,7 @@ sub init {
     $self->enable_stats( 1 )
         if $self->config->{ enable_stats };
     
-    die "You have to enable at least one of stats or weight\n"
+    DD::cop_it "You have to enable at least one of stats or weight\n"
         unless $self->enable_stats || $self->enable_weight;
     
     return ;

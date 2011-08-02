@@ -126,7 +126,7 @@ Read config file , read includes ..
 sub parse_config {
     my ( $self ) = @_;
     
-    die "Config required\n"
+    DD::cop_it "Config required\n"
         unless $self->config;
     
     # parse config -> find all "includes"
@@ -142,7 +142,7 @@ sub parse_config {
                 ? $self->config_dir . "/$include"
                 : $include
             ;
-            die "Cannot include config file '$path': does not exist or not readable (". (
+            DD::cop_it "Cannot include config file '$path': does not exist or not readable (". (
                 $self->has_config_dir
                     ? "config_dir: ". $self->config_dir
                     : "no config_dir"
@@ -166,7 +166,7 @@ sub parse_config {
 sub _init_config {
     my ( $self, $config_ref ) = @_;
     unless ( ref( $self->config ) ) {
-        die "Require hashref or path to file for config, got '". $self->config. "'\n"
+        DD::cop_it "Require hashref or path to file for config, got '". $self->config. "'\n"
             unless -f $config_ref;
         
         # extract dir

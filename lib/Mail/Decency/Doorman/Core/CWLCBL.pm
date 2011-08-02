@@ -76,7 +76,7 @@ after init => sub {
         : keys %tables_ok
     ;
     foreach my $table( @tables ) {
-        die "Cannot use table '$table', please use only ". join( ", ", sort keys %tables_ok ). "\n"
+        DD::cop_it "Cannot use table '$table', please use only ". join( ", ", sort keys %tables_ok ). "\n"
             unless $tables_ok{ $table }
     }
     
@@ -95,7 +95,7 @@ after init => sub {
     push @{ $self->use_lists }, \&handle_recipient_list
         if $self->config->{ activate_recipient_list };
     
-    die "Require at least one list. Either dont deactivate the normal whitelist or acticate at least one of recipient or sender whitelist\n"
+    DD::cop_it "Require at least one list. Either dont deactivate the normal whitelist or acticate at least one of recipient or sender whitelist\n"
         if scalar @{ $self->use_lists } == 0;
 };
 

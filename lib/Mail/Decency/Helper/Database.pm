@@ -12,7 +12,6 @@ use Digest::SHA qw/ sha256_hex /;
 use Storable qw/ freeze /;
 
 use Time::HiRes qw/ usleep ualarm /;
-use Carp qw/ confess /;
 
 =head1 NAME
 
@@ -121,7 +120,7 @@ sub create {
     my $module = "Mail::Decency::Helper::Database::$type";
     my $ok = eval "use $module; 1";
     unless ( $ok ) {
-        confess "Unsupported database '$type': $@\n";
+        DD::cop_it "Unsupported database '$type': $@\n";
     }
     
     # create and return instance
@@ -135,7 +134,7 @@ sub create {
     eval {
         $obj = $module->new( %create );
     };
-    die "Connection error for '$type': $@" if $@;
+    DD::cop_it "Connection error for '$type': $@" if $@;
     return $obj;
 }
 
@@ -232,7 +231,7 @@ Same signature as search. Returns a read handle and a read method instead of the
 
 =cut
 
-sub search_read { die ref( $_[0] ). " needs to implement search_read" }
+sub search_read { DD::cop_it ref( $_[0] ). " needs to implement search_read" }
 
 =head2 count
 
@@ -242,7 +241,7 @@ Returns count of entries in database
 
 =cut
 
-sub count { die ref( $_[0] ). " needs to implement count" }
+sub count { DD::cop_it ref( $_[0] ). " needs to implement count" }
 
 =head2 get
 
@@ -332,7 +331,7 @@ Increments a single column of a single entry
 
 =cut
 
-sub increment { die ref( $_[0] ). " needs to implement increment" }
+sub increment { DD::cop_it ref( $_[0] ). " needs to implement increment" }
 
 =head2 distinct
 
@@ -344,7 +343,7 @@ a given search
 
 =cut
 
-sub distinct { die ref( $_[0] ). " needs to implement distinct" }
+sub distinct { DD::cop_it ref( $_[0] ). " needs to implement distinct" }
 
 =head2 remove
 

@@ -73,7 +73,7 @@ sub search {
     print "SEARCH '$attrs{ scope }' $res_id $filter -> ". $self->l->count_entries. "\n";
     if ( $res_id < 0 ) {
         print "ERR: ". $self->l->errstring. ": ". $self->l->extramsg. "\n";
-        die "ASD"
+        DD::cop_it "ASD"
     }
     
     my $res = _SearchResult->new(

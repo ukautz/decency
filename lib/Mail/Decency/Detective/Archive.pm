@@ -134,7 +134,7 @@ sub init {
     my ( $self ) = @_;
     $self->add_config_params( qw/
         drop archive_dir archive_spam use_index_db enable_full_text_index / );
-    die "Require 'archive_dir' (full path for saving mails)\n"
+    DD::cop_it "Require 'archive_dir' (full path for saving mails)\n"
         unless $self->config->{ archive_dir };
 }
 
@@ -238,7 +238,7 @@ sub archive_mail {
     
     # try make directory, die on error
     mkpath( $dir, { mode => 0700 } ) unless -d $dir;
-    die "Could not create archive directory '$dir'" unless -d $dir;
+    DD::cop_it "Could not create archive directory '$dir'" unless -d $dir;
     
     # make a temp file within (assure it is unique)
     my ( $th, $full_path )
