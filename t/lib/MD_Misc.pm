@@ -4,6 +4,7 @@ package MD_Misc;
 use strict;
 
 
+use Mail::Decency::Helper::Debug;
 use base qw/ Exporter /;
 use FindBin qw/ $Bin /;
 use MD_DB;
@@ -58,10 +59,11 @@ sub init_server {
     
     foreach my $mandatory( qw/ YAML Mouse Cache::Memory DBD::SQLite DBI DBIx::Connector SQL::Abstract::Limit / ) {
         unless ( eval "use $mandatory; 1;" ) {
-
             BAIL_OUT "Cannot load $mandatory which is required for testing: $@";
         }
     }
+    
+    local $ENV{ SETUP_DATABASE } = 1;
     
     my ( $semaphore, $sem_error ) = get_semaphore();
     if ( $sem_error ) {

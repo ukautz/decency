@@ -111,7 +111,7 @@ ok_for_dunno( $doorman, $@, "Handle with instance id in Doorman" );
 $doorman_result = $doorman->session_cleanup();
 
 # use the FAILed header .. which will be ignored, cause the cache is used
-my $mime_file = mime_file( $doorman_result_header, $doorman_result_content_fail );
+my $mime_file = mime_file( $doorman_result_header, $doorman_result_content );
 
 # init session from written mime file
 session_init( $detective, $mime_file );

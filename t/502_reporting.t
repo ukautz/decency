@@ -52,11 +52,10 @@ sub test_answer {
     push @{ $server->childs }, $module;
     my $time_before = time();
     
-    my $handler = $server->get_handlers();
     
     my $res;
     eval {
-        $res = $handler->( $server, $attrs_ref );
+        $res = $server->handle_safe( $attrs_ref );
     };
     ok( !$@ && $res && ref( $res ) eq 'HASH', "Server handled" )
         or BAIL_OUT( "Cannot continue without server response" );

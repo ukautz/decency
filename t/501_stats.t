@@ -62,10 +62,9 @@ my $attrs_ref = {
 };
 push @{ $server->childs }, $module1;
 push @{ $server->childs }, $module2;
-my $handler = $server->get_handlers();
 eval {
-    $handler->( $server, $attrs_ref );
-    $handler->( $server, $attrs_ref );
+    $server->handle_safe( $attrs_ref );
+    $server->handle_safe( $attrs_ref );
 };
 
 #

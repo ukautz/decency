@@ -3,6 +3,7 @@ package MD_DB;
 use strict;
 use DBI;
 use DBD::SQLite;
+use Mail::Decency::Helper::Debug;
 use FindBin qw/ $Bin /;
 
 sub sqlite_file {

@@ -7,6 +7,7 @@ use version 0.74; our $VERSION = qv( "v0.1.4" );
 use Digest::MD5 qw/ md5_hex /;
 use Data::Dumper;
 use Scalar::Util qw/ weaken /;
+use Mail::Decency::Helper::Debug;
 
 =head1 NAME
 

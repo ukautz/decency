@@ -294,7 +294,7 @@ sub init_reloadable {
 
 
 
-=head2 get_handlers
+=head2 handle_safe
 
 Returns subref to handlers, called by L<Mail::Decency::Core::POEForking::Postfix>
 
