@@ -23,7 +23,7 @@ use Time::HiRes qw/ tv_interval gettimeofday /;
 
 use Mail::Decency::Helper::Debug;
 use Mail::Decency::Helper::IP qw/ is_local_host /;
-use Mail::Decency::Core::NetServer;
+use Mail::Decency::Core::NetServer::Postfix;
 use Mail::Decency::Core::Exception;
 use Mail::Decency::Core::SessionItem::Doorman;
 use Mail::Decency::Helper::Config qw/
@@ -483,7 +483,7 @@ sub run {
     my ( $self ) = @_;
     $self->start;
     
-    my $server = Mail::Decency::Core::NetServer->new( {
+    my $server = Mail::Decency::Core::NetServer::Postfix->new( {
         doorman => $self,
         # server  => {
         #     port => $self->config->{ server }->{ port }

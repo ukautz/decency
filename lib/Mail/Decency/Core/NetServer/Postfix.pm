@@ -12,6 +12,8 @@ Mail::Decency::Core::NetServer::Postfix
 
 =cut
 
+use strict;
+use warnings;
 use base qw/ Mail::Decency::Core::NetServer /;
 use Data::Dumper;
 
@@ -37,25 +39,29 @@ sub process_request {
     my %attrib;
     while( my $line = <$client> ) {
         chomp $line;
-        last unless $line;
+        unless( $line ) {
+            my $answer = eval { $self->doorman->handle_safe( \%attrib ) };
+            if ( $@ ) {
+                warn "ERR> $@\n";
+                warn "OUT> action=450 Temporary problem\n";
+                print $client "action=450 Temporary problem\n";
+                print $client "\n";
+            }
+            else {
+                warn "OUT> action=$answer->{ action }\n";
+                print $client "action=$answer->{ action }\n";
+                print $client "\n";
+            }
+            %attrib = ();
+            next;
+        }
+        
         my ( $key, $value ) = split( /=/, $line, 2 );
         $attrib{ $key } = $value;
         warn "<< IN '$line'\n";
     }
     
-    my $answer = eval { $self->doorman->handle_safe( \%attrib ) };
-    if ( $@ ) {
-        warn "ERR> $@\n";
-        warn "OUT> action=450 Temporary problem\n";
-        print $client "action=450 Temporary problem\n";
-        print $client "\n";
-    }
-    else {
-        warn "OUT> action=$answer->{ action }\n";
-        print $client "action=$answer->{ action }\n";
-        print $client "\n";
-    }
-    $self->{ server }->{ client }->close;
+    $self->done(1);
 }
 
 sub doorman {

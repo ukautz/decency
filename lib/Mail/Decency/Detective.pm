@@ -36,7 +36,7 @@ use Mail::Decency::Helper::Config qw/
 use Mail::Decency::Helper::Debug;
 use Mail::Decency::Detective::Core::Constants;
 use Mail::Decency::Core::SessionItem::Detective;
-use Mail::Decency::Core::POEForking::SMTP;
+use Mail::Decency::Core::NetServer::SMTPDetective;
 use Mail::Decency::Core::Exception;
 
 =head1 NAME
@@ -611,9 +611,9 @@ sub start {
         if $self->config->{ reporting };
     
     # start forking server
-    Mail::Decency::Core::POEForking::SMTP->new( $self, {
-        temp_mask => $self->spool_dir. "/mail-XXXXXX"
-    } );
+    # Mail::Decency::Core::POEForking::SMTP->new( $self, {
+    #     temp_mask => $self->spool_dir. "/mail-XXXXXX"
+    # } );
     
 }
 
@@ -627,7 +627,16 @@ Start and run the server via POE::Kernel->run
 sub run {
     my ( $self ) = @_;
     $self->start();
-    POE::Kernel->run;
+    
+    my $server = Mail::Decency::Core::NetServer::SMTPDetective->new( {
+        detective => $self,
+    } );
+    $server->run(
+        port => $self->config->{ server }->{ port },
+        no_client_stdout => 1,
+        log_level => 4,
+        min_servers => 3
+    );
 }
 
 
@@ -1309,6 +1318,8 @@ sub reinject {
                 Debug   => $reinject_ref->{ debug } || $ENV{ DECENCY_REINJECT_DEBUG } || 0,
                 %pre_auth
             ) or DD::cop_it "Could not open SMTP connection: ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" );
+            DD::cop_it "Could not open SMTP connection: ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" )
+                unless $smtp;
             
             # auth ?
             $smtp->auth( $reinject_ref->{ user }, $reinject_ref->{ pass } || '' )
