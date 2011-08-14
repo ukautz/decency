@@ -158,7 +158,7 @@ All goes down
 sub forking_halt {
     my ( $heap, $session ) = @_[ HEAP, SESSION ];
     delete $SESSIONS{ $session->ID };
-    $heap->{ decency }->logger->debug3( "Stop ". ( $heap->{ is_child } ? "child" : "parent" ). " server on $heap->{ server_address } ($$)" );
+    $heap->{ decency } && $heap->{ decency }->logger->debug3( "Stop ". ( $heap->{ is_child } ? "child" : "parent" ). " server on $heap->{ server_address } ($$)" );
 }
 
 
