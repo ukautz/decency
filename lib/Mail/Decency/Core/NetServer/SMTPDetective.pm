@@ -54,7 +54,6 @@ sub reset_mail($) {
 
 sub child_init_hook {
     my ( $self ) = @_;
-    warn "child-init $$\n";
     $self->detective->setup();
 }
 

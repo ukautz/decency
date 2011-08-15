@@ -481,19 +481,16 @@ Start and run the server via POE::Kernel->run
 
 sub run {
     my ( $self ) = @_;
-    $self->start;
+    $self->start();
     
     my $server = Mail::Decency::Core::NetServer::Postfix->new( {
         doorman => $self,
-        # server  => {
-        #     port => $self->config->{ server }->{ port }
-        # }
     } );
     $server->run(
-        port => $self->config->{ server }->{ port },
+        port             => $self->config->{ server }->{ port },
+        host             => $self->config->{ server }->{ host },
+        min_servers      => $self->config->{ server }->{ instances },
         no_client_stdout => 1,
-        log_level => 4,
-        min_servers => 3
     );
 }
 

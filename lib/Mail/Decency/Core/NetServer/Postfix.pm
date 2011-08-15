@@ -29,7 +29,6 @@ use Data::Dumper;
 
 sub child_init_hook {
     my ( $self ) = @_;
-    warn "child-init $$\n";
     $self->doorman->setup();
 }
 
@@ -42,13 +41,12 @@ sub process_request {
         unless( $line ) {
             my $answer = eval { $self->doorman->handle_safe( \%attrib ) };
             if ( $@ ) {
-                warn "ERR> $@\n";
-                warn "OUT> action=450 Temporary problem\n";
+                $ENV{ POSTFIX_DEBUG } && warn "OUT> action=450 Temporary problem\n";
                 print $client "action=450 Temporary problem\n";
                 print $client "\n";
             }
             else {
-                warn "OUT> action=$answer->{ action }\n";
+                $ENV{ POSTFIX_DEBUG } && warn "OUT> action=$answer->{ action }\n";
                 print $client "action=$answer->{ action }\n";
                 print $client "\n";
             }
@@ -58,7 +56,7 @@ sub process_request {
         
         my ( $key, $value ) = split( /=/, $line, 2 );
         $attrib{ $key } = $value;
-        warn "<< IN '$line'\n";
+        $ENV{ POSTFIX_DEBUG } && warn "<< IN '$line'\n";
     }
     
     $self->done(1);
