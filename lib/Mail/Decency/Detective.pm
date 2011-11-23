@@ -635,6 +635,7 @@ sub run {
         port             => $self->config->{ server }->{ port },
         host             => $self->config->{ server }->{ host },
         min_servers      => $self->config->{ server }->{ instances },
+        max_servers      => $self->config->{ server }->{ instances },
         no_client_stdout => 1,
         #log_level        => 4,
     );
