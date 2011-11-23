@@ -491,7 +491,7 @@ sub run {
         port              => $self->config->{ server }->{ port },
         host              => $self->config->{ server }->{ host },
         min_servers       => $instances -1,
-        max_servers       => $instances,
+        max_servers       => $instances +1,
         min_spare_servers => $instances -1,
         max_spare_servers => $instances,
         no_client_stdout  => 1,
