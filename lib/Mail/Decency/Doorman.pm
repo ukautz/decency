@@ -493,6 +493,7 @@ sub run {
         min_servers       => $instances -1,
         max_servers       => $instances,
         min_spare_servers => $instances -1,
+        max_spare_servers => $instances,
         no_client_stdout  => 1,
     );
 }
