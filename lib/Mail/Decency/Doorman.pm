@@ -486,12 +486,14 @@ sub run {
     my $server = Mail::Decency::Core::NetServer::Postfix->new( {
         doorman => $self,
     } );
+    my $instances = $self->config->{ server }->{ instances } > 1 ? $self->config->{ server }->{ instances } : 2;
     $server->run(
-        port             => $self->config->{ server }->{ port },
-        host             => $self->config->{ server }->{ host },
-        min_servers      => $self->config->{ server }->{ instances },
-        max_servers      => $self->config->{ server }->{ instances },
-        no_client_stdout => 1,
+        port              => $self->config->{ server }->{ port },
+        host              => $self->config->{ server }->{ host },
+        min_servers       => $instances -1,
+        max_servers       => $instances,
+        max_spare_servers => $instances -1,
+        no_client_stdout  => 1,
     );
 }
 
