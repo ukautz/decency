@@ -58,6 +58,8 @@ sub process_request {
         $attrib{ $key } = $value;
         $ENV{ POSTFIX_DEBUG } && warn "<< IN '$line'\n";
     }
+    undef $client;
+    delete $self->{ server }->{ client };
     
     $self->done(1);
 }
