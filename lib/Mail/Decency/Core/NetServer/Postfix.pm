@@ -58,6 +58,8 @@ sub process_request {
         $attrib{ $key } = $value;
         $ENV{ POSTFIX_DEBUG } && warn "<< IN '$line'\n";
     }
+    
+    eval { close $client; 1; } || warn "OOps: $@";
     undef $client;
     delete $self->{ server }->{ client };
     
