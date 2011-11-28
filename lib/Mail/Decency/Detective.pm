@@ -36,7 +36,7 @@ use Mail::Decency::Helper::Config qw/
 use Mail::Decency::Helper::Debug;
 use Mail::Decency::Detective::Core::Constants;
 use Mail::Decency::Core::SessionItem::Detective;
-use Mail::Decency::Core::NetServer::SMTPDetective;
+use Mail::Decency::Core::NetServer::Detective;
 use Mail::Decency::Core::Exception;
 
 =head1 NAME
@@ -359,6 +359,7 @@ has reinjections => ( is => 'rw', isa => 'ArrayRef[HashRef]', predicate => 'can_
 
 =head2 init
 
+Called after BUILD
 
 =cut
 
@@ -399,6 +400,11 @@ sub init {
     $self->init_dirs();
 }
 
+=head2 setup
+
+Setup a child instance after forking
+
+=cut
 
 sub setup {
     my ( $self ) = @_;
@@ -413,6 +419,8 @@ sub setup {
 }
 
 =head2 init_reloadable
+
+Init all realoadable configurations. Called in setup and after receiving reload.
 
 =cut
 
@@ -597,7 +605,7 @@ sub init_dirs {
 
 =head2 start
 
-Starts all POE servers without calling the POE::Kernel->run
+OBSOLETE?
 
 =cut
 
@@ -609,12 +617,6 @@ sub start {
     $self->set_locker( 'database' );
     $self->set_locker( 'reporting' )
         if $self->config->{ reporting };
-    
-    # start forking server
-    # Mail::Decency::Core::POEForking::SMTP->new( $self, {
-    #     temp_mask => $self->spool_dir. "/mail-XXXXXX"
-    # } );
-    
 }
 
 
@@ -626,9 +628,16 @@ Start and run the server via POE::Kernel->run
 
 sub run {
     my ( $self ) = @_;
-    $self->start();
     
-    my $server = Mail::Decency::Core::NetServer::SMTPDetective->new( {
+    # setup lockers (shared between all)
+    $self->set_locker( 'default' );
+    $self->set_locker( 'database' );
+    $self->set_locker( 'reporting' )
+        if $self->config->{ reporting };
+    
+    #$self->start();
+    
+    my $server = Mail::Decency::Core::NetServer::Detective->new( {
         detective => $self,
     } );
     

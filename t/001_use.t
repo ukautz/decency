@@ -29,9 +29,8 @@ BEGIN {
         MouseX::NativeTraits    0
         Net::DNS::Resolver    0
         Net::LMTP    0
+        Net::Server::PreFork
         Net::SMTP    0
-        POE    0
-        POE::Filter::Postfix    0
         Proc::ProcessTable    0
         Regexp::Common    0
         Regexp::IPv6    0

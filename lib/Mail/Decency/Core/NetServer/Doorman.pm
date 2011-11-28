@@ -1,8 +1,8 @@
-package Mail::Decency::Core::NetServer::Postfix;
+package Mail::Decency::Core::NetServer::Doorman;
 
 =head1 NAME
 
-Mail::Decency::Core::NetServer::Postfix
+Mail::Decency::Core::NetServer::Doorman
 
 =head1 DESCRIPTION
 

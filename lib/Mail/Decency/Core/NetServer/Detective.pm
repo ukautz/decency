@@ -1,8 +1,8 @@
-package Mail::Decency::Core::NetServer::SMTPDetective;
+package Mail::Decency::Core::NetServer::Detective;
 
 =head1 NAME
 
-Mail::Decency::Core::NetServer::Postfix
+Mail::Decency::Core::NetServer::Detective
 
 =head1 DESCRIPTION
 
