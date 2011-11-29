@@ -28,6 +28,14 @@ decency ..
 
 decency is close to beta, but not yet there. However, it has already passed months of production (yes, i can run it, but you shouldnt) and real time tests survived. Some modules have less and some have more. It's mostly a matter of not having the time to write the docu, cleanup unused stuff and so on.
 
+=head1 INSTALL
+
+See L<http://www.decency-antispam.org/tutorial/install>
+
+=head1 DOCUMENTATION
+
+See L<http://www.decency-antispam.org/>
+
 =head1 REQUIREMENTS
 
 =head2 PERL
