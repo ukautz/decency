@@ -47,7 +47,7 @@ BEGIN {
         Time::HiRes    0
         YAML    0
     );
-    plan tests => scalar( @required );
+    plan tests => int( scalar( @required ) / 2 ) + 1;
     
     while( @required ) {
         my $m = shift @required; my $v = shift @required;

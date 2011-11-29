@@ -641,6 +641,18 @@ sub data_types {
 }
 
 
+=head2 check_table
+
+Has to be overwritten by database implementation
+
+=cut
+
+sub check_table {
+    warn "'check_table' not implemented for ". ref( shift ). "\n";
+    return 0;
+}
+
+
 =head1 AUTHOR
 
 Ulrich Kautz <uk@fortrabbit.de>

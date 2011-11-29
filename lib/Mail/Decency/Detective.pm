@@ -602,24 +602,6 @@ sub init_dirs {
     return ;
 }
 
-
-=head2 start
-
-OBSOLETE?
-
-=cut
-
-sub start {
-    my ( $self ) = @_;
-    
-    # setup lockers (shared between all)
-    $self->set_locker( 'default' );
-    $self->set_locker( 'database' );
-    $self->set_locker( 'reporting' )
-        if $self->config->{ reporting };
-}
-
-
 =head2 run 
 
 Start and run the server via POE::Kernel->run
@@ -634,8 +616,6 @@ sub run {
     $self->set_locker( 'database' );
     $self->set_locker( 'reporting' )
         if $self->config->{ reporting };
-    
-    #$self->start();
     
     my $server = Mail::Decency::Core::NetServer::Detective->new( {
         detective => $self,

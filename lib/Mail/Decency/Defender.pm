@@ -31,7 +31,7 @@ Handler to Detective instance
 
 =cut
 
-has doorman => ( isa => 'Mail::Decency::Doorman', is => 'rw', predicate => 'has_doorman' );
+has doorman => ( isa => 'Mail::Decency::Doorman', is => 'rw', predicate => 'has_doorman', weak_ref => 1 );
 
 =head2 detective
 
@@ -39,7 +39,7 @@ Handler to Detective instance
 
 =cut
 
-has detective => ( isa => 'Mail::Decency::Detective', is => 'rw', predicate => 'has_detective' );
+has detective => ( isa => 'Mail::Decency::Detective', is => 'rw', predicate => 'has_detective', weak_ref => 1 );
 
 =head2 mode
 
@@ -53,18 +53,18 @@ has mode => ( isa => 'Str', is => 'ro', default => 'prequeue' );
 
 =cut
 
-has pmilter => ( isa => 'Mail::Decency::Core::MilterServer', is => 'ro' );
+has pmilter => ( isa => 'Mail::Decency::Core::MilterServer', is => 'ro', weak_ref => 1 );
 
 =head2 smtp
 
 =cut
 
-has smtp => ( isa => 'Mail::Decency::Core::POEForking::PreQueueSMTP', is => 'ro' );
+has smtp => ( isa => 'Mail::Decency::Core::NetServer::Defender', is => 'ro', weak_ref => 1 );
 
 
 =head2 enforce_reinject
 
-Handler to Detective instance
+If enabled, using internal reinjection. Can be used only in milter context
 
 =cut
 
@@ -153,9 +153,12 @@ sub init {
         $self->detective->encapsulated_server( $self );
         $self->detective->init;
         
-        # wheter we use milter or reininjection
-        $self->enforce_reinject( 1 )
-            if $defender_conf_ref->{ detective_enforce_reinject };
+        # in milter mode: enforce reinjection
+        if ( $defender_conf_ref->{ detective_enforce_reinject } ) {
+            DD::cop_it "Cannot enabled 'enforce_reinject' in preqeue-mode. This is only available in milter-mode!"
+                if $self->mode ne 'milter';
+            $self->enforce_reinject( 1 );
+        }
         
         # additional detective stuff
         foreach my $key( qw/ detective_spam_reply detective_virus_reply / ) {
@@ -163,7 +166,8 @@ sub init {
                 if defined $defender_conf_ref->{ $key };
         }
         
-        DD::cop_it "Require reinjections if prequeue mode is ued or detective_enforce_reinject is set. Provide reinject in detective section\n"
+        # check required reinjection
+        DD::cop_it "Require reinjections if prequeue-mode is used or detective_enforce_reinject is set in milter-mode. Provide 'reinject' in detective section\n"
             if ! $self->detective->can_reinject
             && ( $self->mode() eq 'prequeue' || $self->enforce_reinject ) 
         ;
@@ -174,29 +178,11 @@ sub init {
 
 =head2 run
 
-OBSOLETE
+Run the Defender server
 
 =cut
 
 sub run {
-    my ( $self ) = @_;
-    $self->start();
-    
-    if ( $self->mode eq 'prequeue' ) {
-        #POE::Kernel->run;
-    }
-    else {
-        $self->pmilter->main;
-    }
-}
-
-=head2 start
-
-Start the defender server
-
-=cut
-
-sub start {
     my ( $self ) = @_;
     
     $self->set_locker( 'default' );
@@ -207,9 +193,11 @@ sub start {
     $self->logger->debug1( sprintf( 'Start Defender in %s mode', $self->mode ) );
     
     if ( $self->mode eq 'prequeue' ) {
-        eval 'use Mail::Decency::Core::POEForking::PreQueueSMTP; 1;'
-            or DD::cop_it "Could not load Mail::Decency::Core::POEForking::PreQueueSMTP: $@\n";
-        $self->{ smtp } = Mail::Decency::Core::POEForking::PreQueueSMTP->new( $self );
+        eval 'use Mail::Decency::Core::NetServer::Defender; 1;'
+            or DD::cop_it "Could not load Mail::Decency::Core::NetServer::Defender: $@\n";
+        $self->{ smtp } = Mail::Decency::Core::NetServer::Defender->new( {
+            defender => $self
+        } );
         
         if ( $self->has_detective ) {
             # update session cache from doorman and disable reinject
@@ -218,10 +206,27 @@ sub start {
                 #$server->session->disable_reinject( 1 )
             } );
         }
+        
+        my $instances = $self->config->{ server }->{ instances } > 1
+            ? $self->config->{ server }->{ instances }
+            : 2;
+        $self->smtp->run(
+            port              => $self->config->{ server }->{ port },
+            host              => $self->config->{ server }->{ host },
+            min_servers       => $instances -1,
+            max_servers       => $instances +1,
+            min_spare_servers => $instances -1,
+            max_spare_servers => $instances,
+            no_client_stdout  => 1,
+            #log_level        => 4,
+        );
+        
     }
     else {
-        eval 'use Sendmail::PMilter; use Mail::Decency::Core::MilterServer; 1;'
+        eval 'use Sendmail::PMilter; 1;'
             or DD::cop_it "Could not load Sendmail::PMilter: $@\n";
+        eval 'use Mail::Decency::Core::MilterServer; 1;'
+            or DD::cop_it "Could not load Mail::Decency::Core::MilterServer: $@\n";
         $self->{ pmilter } = Mail::Decency::Core::MilterServer->new( parent => $self );
         
         if ( $self->has_detective ) {
@@ -248,12 +253,18 @@ sub start {
                 
             } );
         }
+        $self->pmilter->main;
     }
 }
 
+=head2 handle_safe
+
+Handles data by passing it either to the Doorman or the Detective instance.
+
+=cut
+
 sub handle_safe {
     my ( $self, $type, $ref ) = @_;
-    
     
     my $start = [ gettimeofday() ];
     
@@ -330,6 +341,12 @@ sub handle_safe {
 }
 
 
+=head2 setup
+
+Setup Doorman and Detective instances. Called after fork.
+
+=cut
+
 sub setup {
     my ( $self ) = @_;
     $self->doorman->setup if $self->has_doorman;
@@ -337,7 +354,13 @@ sub setup {
 }
 
 
-sub server_meth {
+=head2 delegate_meth
+
+Delegates methods to all child servers (Detective, Doorman)
+
+=cut
+
+sub delegate_meth {
     my ( $self, $meth, @args ) = @_;
     my %res;
     foreach my $name( qw/ doorman detective / ) {
@@ -352,15 +375,21 @@ sub server_meth {
     return wantarray ? %res : \%res;
 }
 
+=head2 detective_response
+
+Interprets Detective response for handling in Defender context.
+
+=cut
+
 sub detective_response {
     my ( $self, $final_state ) = @_;
     
     my $detective = $self->detective;
     my $enforce_reinject = $self->enforce_reinject;
     
-    # when using reinject, discard 
+    # when using reinject, discard mail (only important for milter!)
     if ( $enforce_reinject ) {
-        return 'discard';
+        return ( 'discard' );
     }
     
     # virus handle
@@ -378,9 +407,25 @@ sub detective_response {
         ( $final_state eq 'spam' && $detective->spam_handle eq 'delete' )
         || ( $final_state eq 'virus' && $detective->virus_handle eq 'delete' )
     ) {
-        return 'discard';
+        return ( 'discard' );
     }
     
+    # if not rejected -> accept
+    else {
+        return ( 'accept' );
+    }
+    
+}
+
+
+=head2 check_structure
+
+Check database structure. Delegated
+
+=cut
+
+sub check_structure {
+    shift->delegate_meth( 'check_structure', @_ );
 }
 
 =head1 AUTHOR

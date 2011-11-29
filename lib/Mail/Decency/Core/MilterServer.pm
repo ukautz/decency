@@ -58,7 +58,7 @@ Backlink to parent instance.. normally a Mail::Decency::Defender
 
 =cut
 
-has parent => ( is => 'ro', required => 1 );
+has parent => ( is => 'ro', required => 1, weak_ref => 1 );
 
 
 =head2 current_context : Sendmail::PMilter::Context
@@ -67,7 +67,7 @@ Set to the current context
 
 =cut
 
-has current_context => ( is => 'rw', isa => 'Sendmail::PMilter::Context' );
+has current_context => ( is => 'rw', isa => 'Sendmail::PMilter::Context', weak_ref => 1 );
 
 
 =head2 BUILD
@@ -115,7 +115,7 @@ sub BUILD {
             eval {
                 
                 # mark as child
-                $self->server_meth( 'this_is_a_child' );
+                $self->delegate_meth( 'this_is_a_child' );
                 
                 # do setup
                 $milter_server->parent->setup;
@@ -152,9 +152,9 @@ sub BUILD {
 
 
 
-sub server_meth {
+sub delegate_meth {
     my ( $self, $meth, @args ) = @_;
-    return $self->parent->server_meth( $meth, @args );
+    return $self->parent->delegate_meth( $meth, @args );
 }
 
 sub my_prefork_dispatcher (@) {
@@ -436,9 +436,9 @@ sub callback_eom {
         last if ! $enforce_reinject && ( $err || ! $ok || $is_last );
     }
     
-    my ( $error_state, $msg ) = $self->parent->detective_response( $final_state );
-    if ( $error_state ) {
-        $ctx->setreply( 554, '5.7.1', $msg ) if $msg;
+    my ( $response_state, $response_msg ) = $self->parent->detective_response( $final_state );
+    if ( $response_state ) {
+        $ctx->setreply( 554, '5.7.1', $response_msg ) if $response_msg;
         if ( $error_state eq 'discard' ) {
             return SMFIS_DISCARD;
         }
