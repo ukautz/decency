@@ -1283,17 +1283,19 @@ sub reinject {
     # ok, the "message" method does not contain the last
     #   response, but the last SUCCESSFUL response.. not good
     #   if we want to determine the actual error response
-    no strict 'refs';
-    my $oldgetline = *{'Net::Cmd::getline'}{ CODE };
     my $last_msg = \( '' );
-    local *{'Net::Cmd::getline'} = sub {
-        my $line = $oldgetline->( @_ );
-        ( undef, my $msg ) = split( ' ', $line, 2 );
-        chomp( $msg );
-        $last_msg = \$msg;
-        return $line;
+    {
+        no warnings 'redefine';
+        no strict 'refs';
+        my $oldgetline = *{'Net::Cmd::getline'}{ CODE };
+        local *{'Net::Cmd::getline'} = sub {
+            my $line = $oldgetline->( @_ );
+            ( undef, my $msg ) = split( ' ', $line, 2 );
+            chomp( $msg );
+            $last_msg = \$msg;
+            return $line;
+        };
     };
-    use strict 'refs';
     
     # perform all reinjections
     foreach my $reinject_ref( @$reinjects_ref ) {
@@ -1332,42 +1334,42 @@ sub reinject {
                 Timeout => 30,
                 Debug   => $reinject_ref->{ debug } || $ENV{ DECENCY_REINJECT_DEBUG } || 0,
                 %pre_auth
-            ) or DD::cop_it "Could not open SMTP connection: ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" );
-            DD::cop_it "Could not open SMTP connection: ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" )
+            ) or die "Could not open SMTP connection ($reinject_host): ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" );
+            die "Could not open SMTP connection ($reinject_host): ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" )
                 unless $smtp;
             
             # auth ?
             $smtp->auth( $reinject_ref->{ user }, $reinject_ref->{ pass } || '' )
-                or DD::cop_it [ auth => $smtp->code, $$last_msg ]
+                or die [ auth => $smtp->code, $$last_msg ]
                 if $reinject_ref->{ user } && ! $class =~ /::TLS$/;
             
             # send hello
             #$smtp->hello( $reinject_ref->{ hello } || 'decency' );
             $smtp->mail( $self->session->from )
-                or DD::cop_it [ from => $smtp->code, $$last_msg ];
+                or die [ from => $smtp->code, $$last_msg ];
             $smtp->to( $self->session->orig_to )
-                or DD::cop_it [ to => $smtp->code, $$last_msg ];
+                or die [ to => $smtp->code, $$last_msg ];
             $smtp->data
-                or DD::cop_it [ data => $smtp->code, $$last_msg ];
+                or die [ data => $smtp->code, $$last_msg ];
             
             # parse file and print all lines
             open my $fh, '<', $self->session->current_file;
             while ( my $l = <$fh> ) {
                 chomp $l;
                 $smtp->datasend( $l. CRLF )
-                    or DD::cop_it $!;
+                    or die $!;
             }
             
             # end data
             $smtp->dataend
-                or DD::cop_it [ dataend => $smtp->code, $$last_msg ];
+                or die [ dataend => $smtp->code, $$last_msg ];
             
             # get reponse message containg new ID
             my $message = $$last_msg;
             
             # quit connection
             $smtp->quit
-                or DD::cop_it [ quit => $smtp->code, $$last_msg ];
+                or die [ quit => $smtp->code, $$last_msg ];
             
             # is delivered
             $any_delivered ++;

@@ -21,10 +21,10 @@ server:
     instances: 3
 
 reinject:
-    bounce:
+    -
         host: 127.0.0.1
         port: 10260
-    deliver:
+    -
         host: 127.0.0.1
         port: 10250
 

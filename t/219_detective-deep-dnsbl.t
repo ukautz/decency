@@ -8,11 +8,11 @@ use lib "$Bin/../lib";
 use MD_Misc;
 
 
-my $server;
-BEGIN { 
-    $server = init_server( 'Detective' );
-    use Test::More tests => 3;
-}
+eval 'use Net::DNSBL::Client; 1;'
+    || plan skip_all => 'Module "Net::DNSBL::Client" not installed';
+
+my $server = init_server( 'Detective' );
+plan tests => 3;
 
 my $module = init_module( $server, DeepDNSBL => {
 } );

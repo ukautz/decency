@@ -7,15 +7,11 @@ use lib "$Bin/lib";
 use lib "$Bin/../lib";
 use MD_Misc;
 
-
-my $server;
-BEGIN { 
-    $server = init_server( 'Doorman' );
-    use Test::More tests => 7;
-}
-
-skip "Email::Valid not installed, skipping tests", 7
+plan skip_all => "Email::Valid not installed, skipping tests"
     unless eval "use Email::Valid; 1;";
+
+my $server = init_server( 'Doorman' );
+plan tests => 7;
 
 my $module = init_module( $server, Basic => {} );
 

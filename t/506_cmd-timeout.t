@@ -12,7 +12,7 @@ use MD_Misc;
 my ( $server );
 BEGIN { 
     $server = init_server( 'Detective' );
-    use Test::More tests => 9;
+    use Test::More tests => 6;
 }
 
 

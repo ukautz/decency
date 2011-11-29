@@ -8,16 +8,13 @@ use lib "$Bin/../lib";
 use MD_Misc;
 
 
-my $server;
-BEGIN { 
-    $server = init_server( 'Doorman' );
-    use Test::More tests => 4;
-}
-
-skip "Net::Netmask not installed, skipping tests", 4
+plan skip_all => "Net::Netmask not installed, skipping tests"
     unless eval "use Net::Netmask; 1;";
-skip "Net::Domain::TLD not installed, skipping tests", 4
+plan skip_all =>  "Net::Domain::TLD not installed, skipping tests"
     unless eval "use Net::Domain::TLD; 1;";
+
+my $server = init_server( 'Doorman' );
+plan tests => 4;
 
 my $module = init_module( $server, Association => {} );
 

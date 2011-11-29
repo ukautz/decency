@@ -52,8 +52,8 @@ sub dmpn($$) {
 sub cop_it($) {
     my ( $ref ) = @_;
     die $ref if ref( $ref ) || eval '$ref->can( "isa" )';
-    $ENV{ DECENCY_DEBUG } && confess( $_[0] );
-    carp( $_[0] )
+    $ENV{ DECENCY_DEBUG } && die confess( $_[0] );
+    die carp( $_[0] )
 }
 
 =head1 METHODS

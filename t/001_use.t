@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use Test::More tests => 36;
+use Test::More;
 
 #
 # VERSION 0.1.6
@@ -28,8 +28,10 @@ BEGIN {
         Mouse    0
         MouseX::NativeTraits    0
         Net::DNS::Resolver    0
+        Net::Domain::TLD        0
         Net::LMTP    0
-        Net::Server::PreFork
+        Net::Netmask    0
+        Net::Server::PreFork    0
         Net::SMTP    0
         Proc::ProcessTable    0
         Regexp::Common    0
@@ -45,6 +47,7 @@ BEGIN {
         Module::Build      0.2805
         Test::More         0
     );
+    plan tests => scalar( @required );
     
     while( @required ) {
         my $m = shift @required; my $v = shift @required;

@@ -7,18 +7,14 @@ use lib "$Bin/lib";
 use lib "$Bin/../lib";
 use MD_Misc;
 
-my $server;
-BEGIN { 
-    $server = init_server( 'Doorman' );
-    use Test::More tests => 5;
-}
 
-
-skip "Net::DNSBL::Client not installed, skipping tests", 3
+plan skip_all => "Net::DNSBL::Client not installed, skipping tests"
     unless eval "use Net::DNSBL::Client; 1;";
 
-my $module = init_module( $server, DNSBL => {} );
+my $server = init_server( 'Doorman' );
+plan tests => 5;
 
+my $module = init_module( $server, DNSBL => {} );
 
 my $attrs_ref = {
     client_address    => '127.0.0.1',

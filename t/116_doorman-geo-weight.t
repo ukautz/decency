@@ -8,14 +8,13 @@ use lib "$Bin/../lib";
 use MD_Misc;
 
 
-my $server;
-BEGIN { 
-    $server = init_server( 'Doorman' );
-    use Test::More tests => 6;
-}
-
-skip "Geo::IP not installed, skipping tests", 6
+plan skip_all => "Geo::IP not installed, skipping tests"
     unless eval "use Geo::IP; 1;";
+
+my $server = init_server( 'Doorman' );
+plan tests => 6;
+
+
 
 my $module = init_module( $server, GeoWeight => {} );
 

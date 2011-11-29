@@ -51,7 +51,7 @@ foreach my $fork_num( 1..5 ) {
 waitpid $_, 0 foreach @pids;
 
 # init tests now (or it will complain)
-use Test::More tests => 3;
+plan tests => 3;
 
 # read all
 my ( $handle, $read ) = $module->database->search_read( greylist => 'address' );
