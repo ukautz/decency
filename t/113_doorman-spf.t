@@ -8,17 +8,13 @@ use lib "$Bin/../lib";
 use MD_Misc;
 
 
-my $server;
-BEGIN { 
-    $server = init_server( 'Doorman' );
-    use Test::More tests => 4;
-}
-
-skip "Mail::SPF not installed, skipping tests", 4
+plan skip_all => "Mail::SPF not installed, skipping tests"
     unless eval "use Mail::SPF; 1;";
 
-my $module = init_module( $server, SPF => {} );
+my $server = init_server( 'Doorman' );
+plan tests => 4;
 
+my $module = init_module( $server, SPF => {} );
 
 # get us a test ip
 my $valid_ip;

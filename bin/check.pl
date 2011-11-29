@@ -44,6 +44,7 @@ use version 0.74; our $VERSION = qv( "v0.2.0" );
 
 use YAML;
 use Getopt::Long;
+use Mail::Decency::Helper::Debug;
 use Mail::Decency::Helper::Shell qw/
     switch_user_group
     pid_is_running
@@ -60,6 +61,9 @@ GetOptions(
     "class|a=s"  => \( $opt{ class } = "" ),
     "config|c=s" => \( $opt{ config } = "" ),
     "pid|p=s"    => \( $opt{ pid } = "" ),
+    
+    # whether running is sufficient
+    "running-sufficient|r" => \( $opt{ running_sufficient } = 0 ),
 );
 
 die "Provide --class <doorman|detective>\n"
@@ -92,9 +96,11 @@ exit 2
 my $config = merged_config( \%opt );
 
 # determine required amount of instances
-my $required_instances = $config->{ server }->{ instances } || 0;
-exit 2
-    unless scalar( @child_pids ) == $required_instances;
+unless( $opt{ running_sufficient } ) {
+    my $required_instances = $config->{ server }->{ instances } || 0;
+    exit 3
+        unless scalar( @child_pids ) == $required_instances;
+}
 
 # all good, all the time
 exit 0;

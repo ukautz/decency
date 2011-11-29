@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use Test::More tests => 36;
+use Test::More;
 
 #
 # VERSION 0.1.6
@@ -11,9 +11,13 @@ BEGIN {
     
     my @required = qw(
         Archive::Tar    1.40
+        Cache::File    0
         Crypt::OpenSSL::RSA    0
         Data::Pager    0
         DateTime    0
+        DBD::SQLite    0
+        DBI    0
+        DBIx::Connector    0
         Digest::MD5    0
         Digest::SHA    0
         Email::Valid    0
@@ -25,27 +29,25 @@ BEGIN {
         MIME::Lite    0
         MIME::Parser    0
         MIME::QuotedPrint    0
+        Module::Build      0.2805
         Mouse    0
         MouseX::NativeTraits    0
         Net::DNS::Resolver    0
+        Net::Domain::TLD        0
         Net::LMTP    0
+        Net::Netmask    0
+        Net::Server::PreFork    0
         Net::SMTP    0
-        POE    0
-        POE::Filter::Postfix    0
         Proc::ProcessTable    0
         Regexp::Common    0
         Regexp::IPv6    0
+        SQL::Abstract::Limit    0
         Storable    0
+        Test::More         0
         Time::HiRes    0
         YAML    0
-        Cache::File    0
-        DBD::SQLite    0
-        DBI    0
-        DBIx::Connector    0
-        SQL::Abstract::Limit    0
-        Module::Build      0.2805
-        Test::More         0
     );
+    plan tests => scalar( @required );
     
     while( @required ) {
         my $m = shift @required; my $v = shift @required;

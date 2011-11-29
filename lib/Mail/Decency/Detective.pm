@@ -36,7 +36,7 @@ use Mail::Decency::Helper::Config qw/
 use Mail::Decency::Helper::Debug;
 use Mail::Decency::Detective::Core::Constants;
 use Mail::Decency::Core::SessionItem::Detective;
-use Mail::Decency::Core::POEForking::SMTP;
+use Mail::Decency::Core::NetServer::Detective;
 use Mail::Decency::Core::Exception;
 
 =head1 NAME
@@ -359,6 +359,7 @@ has reinjections => ( is => 'rw', isa => 'ArrayRef[HashRef]', predicate => 'can_
 
 =head2 init
 
+Called after BUILD
 
 =cut
 
@@ -399,6 +400,11 @@ sub init {
     $self->init_dirs();
 }
 
+=head2 setup
+
+Setup a child instance after forking
+
+=cut
 
 sub setup {
     my ( $self ) = @_;
@@ -413,6 +419,8 @@ sub setup {
 }
 
 =head2 init_reloadable
+
+Init all realoadable configurations. Called in setup and after receiving reload.
 
 =cut
 
@@ -597,7 +605,7 @@ sub init_dirs {
 
 =head2 start
 
-Starts all POE servers without calling the POE::Kernel->run
+OBSOLETE?
 
 =cut
 
@@ -609,12 +617,6 @@ sub start {
     $self->set_locker( 'database' );
     $self->set_locker( 'reporting' )
         if $self->config->{ reporting };
-    
-    # start forking server
-    Mail::Decency::Core::POEForking::SMTP->new( $self, {
-        temp_mask => $self->spool_dir. "/mail-XXXXXX"
-    } );
-    
 }
 
 
@@ -626,8 +628,30 @@ Start and run the server via POE::Kernel->run
 
 sub run {
     my ( $self ) = @_;
-    $self->start();
-    POE::Kernel->run;
+    
+    # setup lockers (shared between all)
+    $self->set_locker( 'default' );
+    $self->set_locker( 'database' );
+    $self->set_locker( 'reporting' )
+        if $self->config->{ reporting };
+    
+    #$self->start();
+    
+    my $server = Mail::Decency::Core::NetServer::Detective->new( {
+        detective => $self,
+    } );
+    
+    my $instances = $self->config->{ server }->{ instances } > 1 ? $self->config->{ server }->{ instances } : 2;
+    $server->run(
+        port              => $self->config->{ server }->{ port },
+        host              => $self->config->{ server }->{ host },
+        min_servers       => $instances -1,
+        max_servers       => $instances +1,
+        min_spare_servers => $instances -1,
+        max_spare_servers => $instances,
+        no_client_stdout  => 1,
+        #log_level        => 4,
+    );
 }
 
 
@@ -1259,17 +1283,19 @@ sub reinject {
     # ok, the "message" method does not contain the last
     #   response, but the last SUCCESSFUL response.. not good
     #   if we want to determine the actual error response
-    no strict 'refs';
-    my $oldgetline = *{'Net::Cmd::getline'}{ CODE };
     my $last_msg = \( '' );
-    local *{'Net::Cmd::getline'} = sub {
-        my $line = $oldgetline->( @_ );
-        ( undef, my $msg ) = split( ' ', $line, 2 );
-        chomp( $msg );
-        $last_msg = \$msg;
-        return $line;
+    {
+        no warnings 'redefine';
+        no strict 'refs';
+        my $oldgetline = *{'Net::Cmd::getline'}{ CODE };
+        local *{'Net::Cmd::getline'} = sub {
+            my $line = $oldgetline->( @_ );
+            ( undef, my $msg ) = split( ' ', $line, 2 );
+            chomp( $msg );
+            $last_msg = \$msg;
+            return $line;
+        };
     };
-    use strict 'refs';
     
     # perform all reinjections
     foreach my $reinject_ref( @$reinjects_ref ) {
@@ -1308,40 +1334,42 @@ sub reinject {
                 Timeout => 30,
                 Debug   => $reinject_ref->{ debug } || $ENV{ DECENCY_REINJECT_DEBUG } || 0,
                 %pre_auth
-            ) or DD::cop_it "Could not open SMTP connection: ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" );
+            ) or die "Could not open SMTP connection ($reinject_host): ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" );
+            die "Could not open SMTP connection ($reinject_host): ". ( join( ", ", grep { defined && $_ } ( $!, $@ ) ) || "" )
+                unless $smtp;
             
             # auth ?
             $smtp->auth( $reinject_ref->{ user }, $reinject_ref->{ pass } || '' )
-                or DD::cop_it [ auth => $smtp->code, $$last_msg ]
+                or die [ auth => $smtp->code, $$last_msg ]
                 if $reinject_ref->{ user } && ! $class =~ /::TLS$/;
             
             # send hello
             #$smtp->hello( $reinject_ref->{ hello } || 'decency' );
             $smtp->mail( $self->session->from )
-                or DD::cop_it [ from => $smtp->code, $$last_msg ];
+                or die [ from => $smtp->code, $$last_msg ];
             $smtp->to( $self->session->orig_to )
-                or DD::cop_it [ to => $smtp->code, $$last_msg ];
+                or die [ to => $smtp->code, $$last_msg ];
             $smtp->data
-                or DD::cop_it [ data => $smtp->code, $$last_msg ];
+                or die [ data => $smtp->code, $$last_msg ];
             
             # parse file and print all lines
             open my $fh, '<', $self->session->current_file;
             while ( my $l = <$fh> ) {
                 chomp $l;
                 $smtp->datasend( $l. CRLF )
-                    or DD::cop_it $!;
+                    or die $!;
             }
             
             # end data
             $smtp->dataend
-                or DD::cop_it [ dataend => $smtp->code, $$last_msg ];
+                or die [ dataend => $smtp->code, $$last_msg ];
             
             # get reponse message containg new ID
             my $message = $$last_msg;
             
             # quit connection
             $smtp->quit
-                or DD::cop_it [ quit => $smtp->code, $$last_msg ];
+                or die [ quit => $smtp->code, $$last_msg ];
             
             # is delivered
             $any_delivered ++;

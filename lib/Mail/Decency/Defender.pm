@@ -174,7 +174,7 @@ sub init {
 
 =head2 run
 
-Start and run the server via POE::Kernel->run
+OBSOLETE
 
 =cut
 
@@ -183,12 +183,18 @@ sub run {
     $self->start();
     
     if ( $self->mode eq 'prequeue' ) {
-        POE::Kernel->run;
+        #POE::Kernel->run;
     }
     else {
         $self->pmilter->main;
     }
 }
+
+=head2 start
+
+Start the defender server
+
+=cut
 
 sub start {
     my ( $self ) = @_;

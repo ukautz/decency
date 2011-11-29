@@ -175,7 +175,7 @@ sub get_name {
 
 =head2 init_postfix_server
 
-Setup POE::Component::Server::Postfix
+Init postfix server (not for detective)
 
 =cut
 

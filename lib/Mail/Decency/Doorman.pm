@@ -23,7 +23,7 @@ use Time::HiRes qw/ tv_interval gettimeofday /;
 
 use Mail::Decency::Helper::Debug;
 use Mail::Decency::Helper::IP qw/ is_local_host /;
-use Mail::Decency::Core::POEForking::Postfix;
+use Mail::Decency::Core::NetServer::Doorman;
 use Mail::Decency::Core::Exception;
 use Mail::Decency::Core::SessionItem::Doorman;
 use Mail::Decency::Helper::Config qw/
@@ -471,10 +471,7 @@ sub start {
     $self->set_locker( 'database' );
     $self->set_locker( 'reporting' )
         if $self->config->{ reporting };
-    
-    Mail::Decency::Core::POEForking::Postfix->new( $self );
 }
-
 
 =head2 run 
 
@@ -484,9 +481,21 @@ Start and run the server via POE::Kernel->run
 
 sub run {
     my ( $self ) = @_;
-    $self->start;
+    $self->start();
     
-    POE::Kernel->run;
+    my $server = Mail::Decency::Core::NetServer::Doorman->new( {
+        doorman => $self,
+    } );
+    my $instances = $self->config->{ server }->{ instances } > 1 ? $self->config->{ server }->{ instances } : 2;
+    $server->run(
+        port              => $self->config->{ server }->{ port },
+        host              => $self->config->{ server }->{ host },
+        min_servers       => $instances -1,
+        max_servers       => $instances +1,
+        min_spare_servers => $instances -1,
+        max_spare_servers => $instances,
+        no_client_stdout  => 1,
+    );
 }
 
 

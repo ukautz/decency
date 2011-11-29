@@ -45,7 +45,7 @@ sub switch_user_group {
             ? $user_or_uid
             : getpwnam( $user_or_uid )
         ;
-        DD::cop_it "Cannot determine UID for '$user_or_uid'\n"
+        DD::cop_it "Cannot determine UID for \"$user_or_uid\"\n"
             unless defined $uid;
         $> = $uid;
     }
@@ -57,7 +57,7 @@ sub switch_user_group {
             ? $group_or_gid
             : getgrnam( $group_or_gid )
         ;
-        DD::cop_it "Cannot determine GID for '$group_or_gid'\n"
+        DD::cop_it "Cannot determine GID for \"$group_or_gid\"\n"
             unless defined $gid;
         $) = $gid;
     }
