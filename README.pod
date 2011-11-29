@@ -1,7 +1,3 @@
-=head1 BE AWARE
-
-The current version is not yet cleaned. Please be patient if it prints out lots of stuff you don't want to know.
-
 =head1 NAME
 
 decency - Anti-Spam fighting framework
@@ -38,60 +34,44 @@ decency is close to beta, but not yet there. However, it has already passed mont
 
 At least you need perl 5.10
 
-=head3 RUN
+=head3 MODULES
 
-    Archive::Tar > 1.40
-    Carp
+    Archive::Tar    1.40
+    Cache::File
     Crypt::OpenSSL::RSA
     Data::Pager
     DateTime
+    DBD::SQLite
+    DBI
+    DBIx::Connector
     Digest::MD5
     Digest::SHA
     Email::Valid
-    File::Basename
-    File::Copy
-    File::Path > 2.07
+    File::Path    2.07
     File::Temp
-    IO > 1.24
     IO::String
-    IO::YAML > 0.08
+    IO::YAML    0.08
+    Mail::Field::Received
     MIME::Lite
     MIME::Parser
     MIME::QuotedPrint
-    Mail::Field::Received
+    Module::Build      0.2805
     Mouse
     MouseX::NativeTraits
     Net::DNS::Resolver
     Net::Domain::TLD
     Net::LMTP
     Net::Netmask
+    Net::Server::PreFork
     Net::SMTP
-    POE
-    POE::Filter::Postfix
     Proc::ProcessTable
     Regexp::Common
     Regexp::IPv6
-    Scalar::Util
+    SQL::Abstract::Limit
     Storable
-    Sys::Syslog
+    Test::More
     Time::HiRes
     YAML
-
-=head3 TESTING
-
-    Cache::File
-    DBD
-    DBD::SQLite
-    DBI
-    DBIx::Connector
-    SQL::Abstract::Limit
-    Module::Build > 0.2805
-    Test::More
-    
-    # optional, for modules which can be tested
-    Mail::SPF
-    Mail::DKIM
-    Net::DNSBL::Client
 
 =head3 OPTIONAL
 
@@ -116,7 +96,4 @@ Depending on which modules you plan to use
     
     # should be installed via distri
     #Geo::IP
-
-
-
 

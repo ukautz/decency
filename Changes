@@ -1,7 +1,4 @@
-TODO:
-    * config_params -> optional_params, required_params
-
-0.2.0 2011-02-30 Ulrich Kautz <uk@fortrabbit.de>
+0.2.0 2011-11-29 Ulrich Kautz <uk@fortrabbit.de>
     * Renamed ContentFilter:: to Detective:: and Policy:: to Doorman::
     * Migrated shema definition to separate model modules
     * Using SQL::Abstract::Limit instead of SQL::Abstract
@@ -30,6 +27,7 @@ TODO:
     * Added LDAP as database
     * Added custom (domain or address based) thresholds via CustomScoring module
     * Dropped LogParser. Maybe revive it in the future
+    * Switchted to Net::Server::PreFork instead of POE
 
 
 0.1.7 2010-07-19 Ulrich Kautz <uk@fortrabbit.de>
